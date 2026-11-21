@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>岸境｜网页完整源码</title>
+<style>
+  :root { --paper:#f4f1e8; --ink:#173f3d; --soft:#5c746e; --line:#cfd4c8; --accent:#c65f42; }
+  * { box-sizing:border-box; }
+  body { margin:0; color:var(--ink); background:var(--paper); font-family:"PingFang SC","Microsoft YaHei",sans-serif; }
+  header { position:sticky; top:0; z-index:2; display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; padding:18px 28px; border-bottom:1px solid var(--line); background:rgba(255,253,247,.94); backdrop-filter:blur(12px); }
+  .identity { display:flex; align-items:center; gap:14px; }
+  .mark { display:grid; place-items:center; width:42px; height:42px; border:1px solid var(--line); border-radius:50%; font-family:"Songti SC",serif; font-size:18px; }
+  h1 { margin:0; font-size:16px; letter-spacing:.05em; }
+  .meta { margin-top:5px; color:var(--soft); font:10px "SFMono-Regular",Consolas,monospace; letter-spacing:.06em; }
+  .actions { display:flex; gap:9px; }
+  .button { display:inline-flex; align-items:center; justify-content:center; min-height:38px; padding:0 15px; border:1px solid var(--line); border-radius:20px; color:var(--ink); background:transparent; text-decoration:none; cursor:pointer; font-size:11px; }
+  .button.primary { color:#fffdf7; background:var(--ink); border-color:var(--ink); }
+  .button:hover { border-color:var(--accent); }
+  main { padding:24px 28px 48px; }
+  .note { margin:0 0 16px; color:var(--soft); font-size:12px; line-height:1.8; }
+  pre { margin:0; padding:24px; overflow:auto; border:1px solid var(--line); border-radius:10px; background:#fffdf7; color:#213f3d; tab-size:2; font:13px/1.65 "SFMono-Regular",Consolas,"Liberation Mono",monospace; }
+  .status { color:var(--accent); }
+  @media(max-width:640px) { header,main { padding-left:14px; padding-right:14px; } .actions { width:100%; } .button { flex:1; } pre { padding:16px; font-size:12px; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="identity"><span class="mark">岸</span><div><h1>岸境 · 网页完整源码</h1><div class="meta">1226 LINES · 110,811 BYTES · UTF-8</div></div></div>
+  <div class="actions"><button class="button" id="copy" type="button">复制全部源码</button><a class="button primary" href="index.html" download="index.html">下载源码</a><a class="button" href="index.html">运行网页</a></div>
+</header>
+<main>
+  <p class="note">下方就是完整的单文件源码，包含全部 HTML、CSS 和 JavaScript。可直接全选复制，保存为 UTF-8 编码的 index.html 后即可运行。</p>
+  <pre id="source-code">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+  &lt;meta name=&quot;description&quot; content=&quot;海岸地貌立体互动图谱：从鸟瞰海岸到 18 种典型地貌的近景与剖面讲解。&quot;&gt;
+  &lt;meta name=&quot;theme-color&quot; content=&quot;#f2efe6&quot;&gt;
+  &lt;title&gt;岸境｜海岸地貌立体图谱&lt;/title&gt;
+  &lt;style&gt;
+    /* === 基础与设计变量 === */
+    :root {
+      --paper: #f2efe6;
+      --paper-deep: #e8e3d7;
+      --ink: #173f3d;
+      --ink-soft: #54706b;
+      --line: rgba(23, 63, 61, 0.17);
+      --sea: #2f6f73;
+      --sea-deep: #173f4a;
+      --sand: #d9bd82;
+      --accent: #c65f42;
+      --white: #fffdf7;
+      --shadow: 0 24px 60px rgba(31, 61, 56, 0.11);
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(255,255,255,0.75), transparent 32rem),
+        var(--paper);
+      font-family: &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, &quot;Noto Sans CJK SC&quot;, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { font: inherit; }
+    button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 4px;
+    }
+    button { color: inherit; }
+    .skip-link {
+      position: fixed; left: 16px; top: -80px; z-index: 100;
+      padding: 12px 18px; background: var(--ink); color: var(--white);
+      border-radius: 8px; text-decoration: none;
+    }
+    .skip-link:focus { top: 16px; }
+    .shell { width: min(1480px, calc(100% - 64px)); margin-inline: auto; }
+    .mono { font-family: &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace; }
+
+    /* === 页头 === */
+    .site-header {
+      min-height: 88px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--line); gap: 24px;
+    }
+    .brand { display: flex; align-items: center; gap: 13px; text-decoration: none; color: var(--ink); }
+    .brand-mark { width: 39px; height: 39px; }
+    .brand-name { font-size: 20px; font-weight: 700; letter-spacing: 0.18em; }
+    .brand-sub { font-size: 10px; letter-spacing: 0.16em; color: var(--ink-soft); margin-top: 3px; }
+    .header-meta { display: flex; align-items: center; gap: 28px; font-size: 12px; color: var(--ink-soft); }
+    .header-meta span { display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+    /* === 标题区 === */
+    .hero {
+      display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.55fr);
+      gap: 72px; align-items: end; padding: 58px 0 42px;
+    }
+    .eyebrow {
+      display: flex; align-items: center; gap: 12px; margin: 0 0 18px;
+      font-size: 11px; font-weight: 650; letter-spacing: 0.17em; color: var(--accent);
+      text-transform: uppercase;
+    }
+    .eyebrow::before { content: &quot;&quot;; width: 28px; height: 1px; background: currentColor; }
+    h1 {
+      margin: 0; max-width: 900px; font-family: &quot;Songti SC&quot;, &quot;STSong&quot;, &quot;Noto Serif CJK SC&quot;, serif;
+      font-size: clamp(38px, 4.6vw, 70px); font-weight: 600; line-height: 1.16; letter-spacing: -0.045em;
+    }
+    h1 em { color: var(--sea); font-style: normal; }
+    .hero-note { padding-bottom: 5px; }
+    .hero-note p { margin: 0 0 24px; color: var(--ink-soft); line-height: 1.85; font-size: 14px; max-width: 36em; }
+    .orientation {
+      display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 8px 20px;
+      padding-top: 17px; border-top: 1px solid var(--line); font-size: 11px; letter-spacing: 0.08em;
+    }
+    .orientation strong { font-weight: 650; color: var(--ink); }
+
+    /* === 图谱主容器 === */
+    .atlas {
+      position: relative; border: 1px solid rgba(23,63,61,0.2); border-radius: 26px;
+      overflow: hidden; background: #dce6df; box-shadow: var(--shadow);
+    }
+    .atlas-toolbar {
+      position: relative; z-index: 5; min-height: 68px; padding: 12px 18px 12px 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      background: rgba(255,253,247,0.92); border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(14px);
+    }
+    .atlas-title { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .atlas-title svg { flex: 0 0 auto; }
+    .atlas-title strong { display: block; font-size: 13px; letter-spacing: 0.04em; }
+    .atlas-title small { display: block; margin-top: 4px; font-size: 10px; color: var(--ink-soft); letter-spacing: 0.06em; }
+    .toolbar-actions { display: flex; align-items: center; gap: 8px; }
+    .tool-button {
+      min-width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center;
+      gap: 7px; border: 1px solid var(--line); background: transparent; border-radius: 50%;
+      cursor: pointer; transition: background 0.25s, transform 0.25s;
+    }
+    .tool-button:hover { background: var(--paper-deep); }
+    .tool-button:active { transform: scale(0.94); }
+    .tool-button:disabled { opacity: 0.32; cursor: not-allowed; }
+    .tool-button.reset { border-radius: 20px; padding-inline: 14px; font-size: 11px; }
+    .tool-button svg { width: 16px; height: 16px; }
+    .tool-button.motion-toggle { width: auto; border-radius: 20px; padding-inline: 13px; font-size: 11px; }
+    .motion-toggle .wave-icon { width: 18px; overflow: visible; }
+    .motion-toggle .wave-icon path { animation: miniWave 2.6s ease-in-out infinite; }
+    .motion-toggle .wave-icon path:nth-child(2) { animation-delay: -0.9s; }
+    .motion-toggle[aria-pressed=&quot;false&quot;] { color: var(--ink-soft); background: var(--paper); }
+    body.motion-paused .sea-motion,
+    body.motion-paused .sea-motion *,
+    body.motion-paused .diagram-wave,
+    body.motion-paused .diagram-wave *,
+    body.motion-paused .motion-toggle .wave-icon path { animation-play-state: paused !important; }
+    @keyframes miniWave { 50% { transform: translateX(3px); } }
+
+    /* === 海水动态 === */
+    .tide-sheet { transform-box: fill-box; animation: tideWash 11s ease-in-out infinite; }
+    .tide-sheet.secondary { animation-delay: -5.5s; animation-duration: 14s; }
+    .swell-line { animation: swellDrift 13s ease-in-out infinite alternate; }
+    .swell-line:nth-child(2n) { animation-delay: -4s; animation-duration: 17s; }
+    .current-flow { stroke-dasharray: 7 24; animation: currentRun 15s linear infinite; }
+    .current-flow.slow { animation-duration: 23s; animation-direction: reverse; }
+    .surf-line { animation: surfPush 7.5s cubic-bezier(.45,0,.55,1) infinite; }
+    .surf-line.delay-one { animation-delay: -2.2s; }
+    .surf-line.delay-two { animation-delay: -4.4s; }
+    .shore-foam { animation: foamBreathe 5.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+    .shore-foam.delay { animation-delay: -2.7s; }
+    .breaker { transform-box: fill-box; transform-origin: center; animation: breakerCurl 6.4s ease-out infinite; }
+    .breaker:nth-child(2) { animation-delay: -2.1s; }
+    .breaker:nth-child(3) { animation-delay: -4.2s; }
+    .splash-drop { transform-box: fill-box; transform-origin: center; animation: splashUp 3.2s ease-out infinite; }
+    .splash-drop:nth-child(2) { animation-delay: -0.5s; }
+    .splash-drop:nth-child(3) { animation-delay: -1s; }
+    .splash-drop:nth-child(4) { animation-delay: -1.5s; }
+    .splash-drop:nth-child(5) { animation-delay: -2s; }
+    .splash-ring { transform-box: fill-box; transform-origin: center; animation: splashRing 3.6s ease-out infinite; }
+    .sea-glint { animation: glint 6s ease-in-out infinite; }
+    .sea-glint.delay { animation-delay: -2.7s; animation-duration: 8s; }
+    @keyframes tideWash {
+      0%, 100% { transform: translateX(-4px) scaleY(0.985); opacity: .3; }
+      47% { transform: translateX(9px) scaleY(1); opacity: .72; }
+      66% { transform: translateX(3px) scaleY(0.99); opacity: .48; }
+    }
+    @keyframes swellDrift { from { transform: translate(-9px, 2px); } to { transform: translate(14px, -4px); } }
+    @keyframes currentRun { to { stroke-dashoffset: -310; } }
+    @keyframes surfPush {
+      0%, 10%, 100% { transform: translateX(0); opacity: .18; stroke-width: 4; }
+      42% { transform: translateX(-13px); opacity: .88; stroke-width: 10; }
+      58% { transform: translateX(-2px); opacity: .62; stroke-width: 7; }
+    }
+    @keyframes foamBreathe { 0%, 100% { opacity: .35; transform: scale(.75); } 50% { opacity: .9; transform: scale(1.18); } }
+    @keyframes breakerCurl {
+      0%, 18% { opacity: 0; transform: translateX(9px) scaleX(.5) scaleY(.8); }
+      38% { opacity: .88; transform: translateX(-4px) scaleX(1) scaleY(1); }
+      62% { opacity: .38; transform: translateX(-18px) scaleX(1.12) scaleY(.65); }
+      80%, 100% { opacity: 0; transform: translateX(-28px) scaleX(1.25) scaleY(.45); }
+    }
+    @keyframes splashUp {
+      0%, 15% { opacity: 0; transform: translate(0, 7px) scale(.3); }
+      40% { opacity: .92; transform: translate(var(--sx, 3px), -15px) scale(1); }
+      70% { opacity: .25; transform: translate(var(--ex, 9px), -31px) scale(.55); }
+      100% { opacity: 0; transform: translate(var(--ex, 9px), -39px) scale(.3); }
+    }
+    @keyframes splashRing { 0%, 22% { opacity: 0; transform: scale(.35); } 42% { opacity: .45; transform: scale(1); } 80%, 100% { opacity: 0; transform: scale(1.55); } }
+    @keyframes glint { 0%, 100% { opacity: .07; transform: translateX(-8px); } 50% { opacity: .24; transform: translateX(8px); } }
+
+    .atlas-stage { position: relative; height: auto; aspect-ratio: 16 / 10; min-height: 680px; max-height: 900px; overflow: hidden; background: #8eb4b2; }
+    .overview-layer {
+      position: absolute; inset: 0; transform: scale(1); transform-origin: 50% 50%;
+      opacity: 1; transition: transform 0.85s var(--ease), opacity 0.55s ease;
+      will-change: transform, opacity;
+    }
+    .overview-svg { display: block; width: 100%; height: 100%; }
+    .atlas-stage.is-detail .overview-layer { opacity: 0; transform: scale(1.82); pointer-events: none; }
+    .map-note {
+      position: absolute; left: 22px; top: 20px; display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border: 1px solid rgba(255,255,255,0.35); border-radius: 20px;
+      background: rgba(19,58,62,0.76); color: #f7f4e9; font-size: 11px; letter-spacing: 0.04em;
+      backdrop-filter: blur(10px); pointer-events: none;
+    }
+    .map-note .pulse { width: 7px; height: 7px; border-radius: 50%; background: #e8a07f; animation: breathe 2.4s ease-in-out infinite; }
+    .note-mobile { display: none; }
+    .wet-sand { animation: wetSand 11s ease-in-out infinite; }
+    .wet-sand.delayed { animation-delay: -5.5s; }
+    @keyframes wetSand { 0%, 100% { opacity: .12; } 44% { opacity: .48; } 60% { opacity: .3; } }
+    body.motion-paused .wet-sand,
+    body.motion-paused .wet-sand * { animation-play-state: paused !important; }
+    @keyframes breathe { 50% { transform: scale(1.5); opacity: 0.55; } }
+
+    /* SVG 总览标注 */
+    .hotspot { cursor: pointer; outline: none; }
+    .hotspot .leader { fill: none; stroke: rgba(23,63,61,0.64); stroke-width: 1.3; stroke-dasharray: 3 4; }
+    .hotspot .anchor-ring { fill: rgba(255,253,247,0.88); stroke: var(--accent); stroke-width: 2; }
+    .hotspot .anchor-core { fill: var(--accent); }
+    .hotspot .label-bg { fill: rgba(255,253,247,0.94); stroke: rgba(23,63,61,0.22); stroke-width: 1; }
+    .hotspot .label-number { fill: var(--accent); font: 600 11px &quot;SFMono-Regular&quot;, Consolas, monospace; }
+    .hotspot .label-name { fill: var(--ink); font: 600 15px &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif; letter-spacing: 1px; }
+    .hotspot .label-bg, .hotspot .label-name, .hotspot .label-number { transition: transform 0.3s var(--ease), fill 0.3s; }
+    .hotspot:hover .label-bg, .hotspot:focus-visible .label-bg, .hotspot.is-active .label-bg { fill: #fff8e9; stroke: var(--accent); stroke-width: 2; }
+    .hotspot:hover .anchor-ring, .hotspot:focus-visible .anchor-ring { r: 10; }
+    .hotspot.is-muted { opacity: 0.14; pointer-events: none; }
+    .hotspot:focus-visible .label-bg { outline: none; }
+    .zone-caption { fill: rgba(23,63,61,0.48); font: 600 11px &quot;PingFang SC&quot;, sans-serif; letter-spacing: 4px; }
+    .sea-label { fill: rgba(255,255,255,0.42); font: 400 13px &quot;Songti SC&quot;, serif; letter-spacing: 8px; }
+    .wave-line { animation: waveDrift 8s ease-in-out infinite alternate; }
+    .wave-line:nth-child(2n) { animation-delay: -3s; }
+    @keyframes waveDrift { to { transform: translateX(10px); opacity: 0.55; } }
+
+    /* === 地貌详情 === */
+    .detail-layer {
+      position: absolute; inset: 0; z-index: 3; opacity: 0; transform: scale(0.965) translateY(14px);
+      pointer-events: none; background: var(--paper); overflow: hidden;
+      transition: opacity 0.55s ease 0.18s, transform 0.75s var(--ease) 0.12s;
+      will-change: transform, opacity;
+    }
+    .atlas-stage.is-detail .detail-layer { opacity: 1; transform: none; pointer-events: auto; }
+    .detail-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.75fr); height: 100%; }
+    .detail-visual { position: relative; min-width: 0; background: #d9e5df; overflow: hidden; }
+    .detail-svg { width: 100%; height: 100%; display: block; }
+    .back-button {
+      position: absolute; z-index: 4; left: 24px; top: 22px; height: 42px; padding: 0 16px 0 12px;
+      display: inline-flex; align-items: center; gap: 9px; border: 1px solid rgba(23,63,61,0.18);
+      border-radius: 22px; background: rgba(255,253,247,0.9); backdrop-filter: blur(12px);
+      cursor: pointer; font-size: 12px; font-weight: 600; box-shadow: 0 6px 20px rgba(23,63,61,0.08);
+      transition: transform 0.25s, background 0.25s;
+    }
+    .back-button:hover { background: var(--white); transform: translateX(-3px); }
+    .back-button:active { transform: translateX(-3px) scale(0.97); }
+    .back-button svg { width: 17px; height: 17px; }
+    .view-badge {
+      position: absolute; right: 22px; top: 24px; display: flex; align-items: center; gap: 8px;
+      padding: 9px 12px; border-radius: 4px; background: rgba(23,63,61,0.78); color: var(--white);
+      font-size: 10px; letter-spacing: 0.12em;
+    }
+    .detail-info { padding: 44px 38px 26px; display: flex; flex-direction: column; overflow-y: auto; background: var(--white); }
+    .detail-count { display: flex; align-items: center; justify-content: space-between; margin-bottom: 34px; }
+    .detail-count .number { font-size: 12px; color: var(--accent); letter-spacing: 0.12em; }
+    .detail-count .category { padding: 6px 9px; border: 1px solid var(--line); border-radius: 3px; font-size: 10px; color: var(--ink-soft); }
+    .detail-info h2 { margin: 0; font-family: &quot;Songti SC&quot;, &quot;STSong&quot;, serif; font-size: clamp(34px, 3.5vw, 52px); font-weight: 600; letter-spacing: -0.04em; }
+    .detail-en { margin: 10px 0 28px; color: var(--ink-soft); font-size: 10px; letter-spacing: 0.13em; text-transform: uppercase; }
+    .info-section { padding: 20px 0; border-top: 1px solid var(--line); }
+    .info-section h3 { display: flex; align-items: center; gap: 9px; margin: 0 0 10px; font-size: 12px; letter-spacing: 0.08em; }
+    .info-section h3 span { color: var(--accent); font: 600 10px &quot;SFMono-Regular&quot;, Consolas, monospace; }
+    .info-section p { margin: 0; color: #49645f; font-size: 13px; line-height: 1.85; text-align: justify; }
+    .recognition { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+    .recognition span { padding: 6px 9px; background: var(--paper); border-radius: 3px; color: var(--ink-soft); font-size: 10px; }
+    .detail-navigation { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; padding-top: 24px; }
+    .nav-button {
+      min-height: 50px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px;
+      background: transparent; text-align: left; cursor: pointer; transition: background 0.25s, transform 0.25s;
+    }
+    .nav-button:last-child { text-align: right; }
+    .nav-button:hover { background: var(--paper); }
+    .nav-button:active { transform: scale(0.98); }
+    .nav-button small { display: block; margin-bottom: 3px; font-size: 9px; color: var(--ink-soft); letter-spacing: 0.08em; }
+    .nav-button strong { display: block; font-size: 12px; font-weight: 600; }
+    .detail-svg .diagram-wave { animation: diagramWave 4s ease-in-out infinite alternate; }
+    @keyframes diagramWave { to { transform: translateX(8px); } }
+
+    /* === 筛选与索引 === */
+    .atlas-bottom { padding: 20px 24px 22px; background: var(--white); border-top: 1px solid var(--line); }
+    .filter-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .filter-label { margin-right: 7px; color: var(--ink-soft); font-size: 10px; letter-spacing: 0.1em; }
+    .filter-button {
+      padding: 8px 12px; border: 1px solid transparent; border-radius: 18px; background: transparent;
+      color: var(--ink-soft); cursor: pointer; font-size: 11px; transition: all 0.25s;
+    }
+    .filter-button:hover { background: var(--paper); color: var(--ink); }
+    .filter-button.is-active { border-color: var(--ink); background: var(--ink); color: var(--white); }
+    .filter-hint { margin-left: auto; color: var(--ink-soft); font-size: 10px; }
+    .index-strip { display: flex; gap: 7px; overflow-x: auto; padding: 17px 1px 2px; scrollbar-width: thin; }
+    .index-chip {
+      flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 8px 10px;
+      border: 1px solid var(--line); border-radius: 4px; background: transparent; color: var(--ink);
+      cursor: pointer; font-size: 11px; transition: background 0.25s, border-color 0.25s, transform 0.25s;
+    }
+    .index-chip span { color: var(--accent); font: 9px &quot;SFMono-Regular&quot;, Consolas, monospace; }
+    .index-chip:hover { background: var(--paper); border-color: var(--sea); transform: translateY(-2px); }
+
+    /* === 页脚说明 === */
+    .page-notes { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; padding: 40px 0 48px; }
+    .note-block { display: grid; grid-template-columns: 36px 1fr; gap: 14px; }
+    .note-block svg { width: 25px; height: 25px; margin-top: 2px; }
+    .note-block h2 { margin: 0 0 8px; font-size: 12px; letter-spacing: 0.08em; }
+    .note-block p { margin: 0; color: var(--ink-soft); font-size: 11px; line-height: 1.8; }
+    .site-footer { display: flex; justify-content: space-between; gap: 24px; padding: 22px 0; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: 10px; letter-spacing: 0.08em; }
+
+    /* === 响应式 === */
+    @media (max-width: 1100px) {
+      .shell { width: min(100% - 40px, 1480px); }
+      .hero { gap: 36px; }
+      .atlas-stage { height: 680px; }
+      .detail-info { padding: 32px 26px 22px; }
+      .detail-count { margin-bottom: 24px; }
+      .detail-layout { grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr); }
+    }
+    @media (max-width: 768px) {
+      .shell { width: calc(100% - 28px); }
+      .site-header { min-height: 72px; }
+      .brand-sub, .header-meta span:first-child { display: none; }
+      .header-meta { font-size: 10px; }
+      .hero { grid-template-columns: 1fr; gap: 24px; padding: 36px 0 28px; }
+      h1 { font-size: clamp(36px, 10vw, 52px); }
+      .hero-note p { margin-bottom: 18px; }
+      .atlas { border-radius: 18px; }
+      .atlas-toolbar { padding: 10px 12px 10px 15px; min-height: 60px; }
+      .atlas-title small { display: none; }
+      .atlas-title { gap: 9px; }
+      .atlas-title strong { font-size: 11px; }
+      .tool-button.reset { width: 38px; padding: 0; }
+      .tool-button.reset span { display: none; }
+      .atlas-stage { height: 620px; min-height: 0; aspect-ratio: auto; }
+      .overview-layer { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+      .overview-layer::-webkit-scrollbar { display: none; }
+      .overview-svg { width: 1000px; max-width: none; height: 100%; margin-left: 0; }
+      .map-note { left: 12px; top: 12px; bottom: auto; font-size: 9px; }
+      .note-desktop { display: none; }
+      .note-mobile { display: inline; }
+      #zoom-actions { display: none; }
+      .detail-layer { overflow-y: visible; }
+      .atlas-stage.is-detail { height: auto; max-height: none; overflow: visible; }
+      .atlas-stage.is-detail .detail-layer { position: relative; }
+      .detail-layout { display: block; height: auto; min-height: 100%; }
+      .detail-visual { height: 430px; }
+      .detail-info { overflow: visible; padding: 30px 24px 24px; }
+      .detail-count { margin-bottom: 22px; }
+      .detail-info h2 { font-size: 40px; }
+      .back-button { left: 14px; top: 14px; }
+      .view-badge { right: 14px; top: 16px; }
+      .atlas-bottom { padding: 16px 14px 18px; }
+      .filter-hint { display: none; }
+      .page-notes { grid-template-columns: 1fr; gap: 26px; padding: 30px 0; }
+      .site-footer { flex-direction: column; gap: 8px; }
+    }
+    @media (max-width: 420px) {
+      .header-meta { display: none; }
+      .atlas-stage { height: 620px; }
+      .detail-visual { height: 360px; }
+      .view-badge { top: 66px; left: 15px; right: auto; }
+      .tool-button { min-width: 34px; width: 34px; height: 34px; }
+      .tool-button.motion-toggle { width: 36px; padding-inline: 0; }
+      .motion-toggle span { display: none; }
+      .atlas-title svg { display: none; }
+      .orientation { gap: 8px 14px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+      .overview-layer, .detail-layer { transition-duration: 0.01ms !important; transition-delay: 0ms !important; }
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;a class=&quot;skip-link&quot; href=&quot;#atlas&quot;&gt;跳到互动图谱&lt;/a&gt;
+  &lt;header class=&quot;site-header shell&quot;&gt;
+    &lt;a class=&quot;brand&quot; href=&quot;#&quot; aria-label=&quot;岸境首页&quot;&gt;
+      &lt;svg class=&quot;brand-mark&quot; viewBox=&quot;0 0 40 40&quot; fill=&quot;none&quot; aria-hidden=&quot;true&quot;&gt;
+        &lt;rect x=&quot;1&quot; y=&quot;1&quot; width=&quot;38&quot; height=&quot;38&quot; rx=&quot;19&quot; stroke=&quot;currentColor&quot; opacity=&quot;.35&quot;/&gt;
+        &lt;path d=&quot;M8 25c5-7 9 6 14-1s7-1 10-5M8 30c5-7 9 6 14-1s7-1 10-5&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.5&quot;/&gt;
+        &lt;path d=&quot;M24 8c-3 5-4 8-2 12 4-1 7-4 8-9-3 1-4 0-6-3Z&quot; fill=&quot;#c65f42&quot;/&gt;
+      &lt;/svg&gt;
+      &lt;span&gt;&lt;span class=&quot;brand-name&quot;&gt;岸境&lt;/span&gt;&lt;span class=&quot;brand-sub&quot; style=&quot;display:block&quot;&gt;COASTAL ATLAS&lt;/span&gt;&lt;/span&gt;
+    &lt;/a&gt;
+    &lt;div class=&quot;header-meta&quot;&gt;
+      &lt;span&gt;&lt;i class=&quot;status-dot&quot;&gt;&lt;/i&gt;互动地理图谱&lt;/span&gt;
+      &lt;span class=&quot;mono&quot;&gt;18 LANDFORMS · 01 ATLAS&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/header&gt;
+
+  &lt;main class=&quot;shell&quot;&gt;
+    &lt;section class=&quot;hero&quot; aria-labelledby=&quot;page-title&quot;&gt;
+      &lt;div&gt;
+        &lt;p class=&quot;eyebrow&quot;&gt;Coastal geomorphology · 海岸地貌&lt;/p&gt;
+        &lt;h1 id=&quot;page-title&quot;&gt;沿着一条海岸线，&lt;br&gt;&lt;em&gt;读懂海与陆的交锋。&lt;/em&gt;&lt;/h1&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;hero-note&quot;&gt;
+        &lt;p&gt;从海浪雕出的岩崖，到泥沙铺成的沙洲。点击图中的地貌名称，让视线由鸟瞰进入近景与剖面，观察形态，也理解它为何形成。&lt;/p&gt;
+        &lt;div class=&quot;orientation&quot; aria-label=&quot;地图方向：上北下南，左西右东&quot;&gt;
+          &lt;span&gt;&lt;strong&gt;上北&lt;/strong&gt; N&lt;/span&gt;&lt;span&gt;&lt;strong&gt;下南&lt;/strong&gt; S&lt;/span&gt;&lt;span&gt;&lt;strong&gt;西海&lt;/strong&gt; W&lt;/span&gt;&lt;span&gt;&lt;strong&gt;东陆&lt;/strong&gt; E&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;atlas&quot; id=&quot;atlas&quot; aria-label=&quot;海岸地貌互动图谱&quot;&gt;
+      &lt;div class=&quot;atlas-toolbar&quot;&gt;
+        &lt;div class=&quot;atlas-title&quot;&gt;
+          &lt;svg width=&quot;25&quot; height=&quot;25&quot; viewBox=&quot;0 0 25 25&quot; fill=&quot;none&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;12.5&quot; cy=&quot;12.5&quot; r=&quot;10&quot; stroke=&quot;currentColor&quot; opacity=&quot;.35&quot;/&gt;&lt;path d=&quot;m15.8 7.8-2.1 5.9-5.9 2.1 2.1-5.9 5.9-2.1Z&quot; stroke=&quot;currentColor&quot;/&gt;&lt;circle cx=&quot;12.5&quot; cy=&quot;12.5&quot; r=&quot;1.5&quot; fill=&quot;#c65f42&quot;/&gt;&lt;/svg&gt;
+          &lt;div&gt;&lt;strong id=&quot;toolbar-title&quot;&gt;海岸全景 · 动态立体鸟瞰&lt;/strong&gt;&lt;small id=&quot;toolbar-subtitle&quot;&gt; 潮汐持续冲刷 · 教学模型 / 非等比例&lt;/small&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;toolbar-actions&quot;&gt;
+          &lt;button class=&quot;tool-button motion-toggle&quot; id=&quot;motion-toggle&quot; type=&quot;button&quot; aria-pressed=&quot;true&quot; aria-label=&quot;暂停海水动态&quot; title=&quot;暂停海水动态&quot;&gt;
+            &lt;svg class=&quot;wave-icon&quot; viewBox=&quot;0 0 20 16&quot; fill=&quot;none&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M1 5c2.5-3 5 3 7.5 0S16 5 19 2&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.4&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;path d=&quot;M1 11c2.5-3 5 3 7.5 0S16 11 19 8&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.4&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;/svg&gt;
+            &lt;span&gt;海水动态&lt;/span&gt;
+          &lt;/button&gt;
+          &lt;div class=&quot;toolbar-actions&quot; id=&quot;zoom-actions&quot;&gt;
+            &lt;button class=&quot;tool-button&quot; id=&quot;zoom-out&quot; type=&quot;button&quot; aria-label=&quot;缩小地图&quot; title=&quot;缩小地图&quot;&gt;&lt;svg viewBox=&quot;0 0 20 20&quot; fill=&quot;none&quot;&gt;&lt;path d=&quot;M5 10h10&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.5&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+            &lt;button class=&quot;tool-button&quot; id=&quot;zoom-in&quot; type=&quot;button&quot; aria-label=&quot;放大地图&quot; title=&quot;放大地图&quot;&gt;&lt;svg viewBox=&quot;0 0 20 20&quot; fill=&quot;none&quot;&gt;&lt;path d=&quot;M5 10h10M10 5v10&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.5&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+            &lt;button class=&quot;tool-button reset&quot; id=&quot;reset-view&quot; type=&quot;button&quot; aria-label=&quot;复位地图视角&quot;&gt;&lt;svg viewBox=&quot;0 0 20 20&quot; fill=&quot;none&quot;&gt;&lt;path d=&quot;M4 8a6 6 0 1 1 .5 5M4 4v4h4&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.4&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;/svg&gt;&lt;span&gt;复位视角&lt;/span&gt;&lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;atlas-stage&quot; id=&quot;atlas-stage&quot;&gt;
+        &lt;div class=&quot;overview-layer&quot; id=&quot;overview-layer&quot;&gt;
+          &lt;svg class=&quot;overview-svg&quot; viewBox=&quot;0 0 1600 1000&quot; preserveAspectRatio=&quot;xMidYMid slice&quot; role=&quot;img&quot; aria-labelledby=&quot;map-title map-desc&quot;&gt;
+            &lt;title id=&quot;map-title&quot;&gt;南北向海岸的立体鸟瞰综合图&lt;/title&gt;
+            &lt;desc id=&quot;map-desc&quot;&gt;地图上方为北，下方为南，左侧西方为海，右侧东方为陆地。图中标注十八种可点击的海岸地貌。&lt;/desc&gt;
+            &lt;defs&gt;
+              &lt;linearGradient id=&quot;seaGradient&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;1&quot; y2=&quot;1&quot;&gt;&lt;stop stop-color=&quot;#28666f&quot;/&gt;&lt;stop offset=&quot;.58&quot; stop-color=&quot;#4d8989&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#7ca7a0&quot;/&gt;&lt;/linearGradient&gt;
+              &lt;linearGradient id=&quot;shallowGradient&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;1&quot; y2=&quot;0&quot;&gt;&lt;stop stop-color=&quot;#8cb9ad&quot; stop-opacity=&quot;0&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#b5cbb5&quot; stop-opacity=&quot;.88&quot;/&gt;&lt;/linearGradient&gt;
+              &lt;linearGradient id=&quot;landGradient&quot; gradientUnits=&quot;userSpaceOnUse&quot; x1=&quot;728&quot; y1=&quot;0&quot; x2=&quot;1425&quot; y2=&quot;946&quot;&gt;&lt;stop stop-color=&quot;#b8b891&quot;/&gt;&lt;stop offset=&quot;.5&quot; stop-color=&quot;#c9c39a&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#9da982&quot;/&gt;&lt;/linearGradient&gt;
+              &lt;linearGradient id=&quot;rockTop&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;1&quot; y2=&quot;1&quot;&gt;&lt;stop stop-color=&quot;#b3aa86&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#827e65&quot;/&gt;&lt;/linearGradient&gt;
+              &lt;linearGradient id=&quot;rockSide&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;0&quot; y2=&quot;1&quot;&gt;&lt;stop stop-color=&quot;#766f5b&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#4b5b54&quot;/&gt;&lt;/linearGradient&gt;
+              &lt;linearGradient id=&quot;sandGradient&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;1&quot; y2=&quot;1&quot;&gt;&lt;stop stop-color=&quot;#ead7a4&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#c9a96d&quot;/&gt;&lt;/linearGradient&gt;
+              &lt;radialGradient id=&quot;duneGradient&quot; cx=&quot;35%&quot; cy=&quot;25%&quot;&gt;&lt;stop stop-color=&quot;#eed9a3&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#bda36f&quot;/&gt;&lt;/radialGradient&gt;
+              &lt;pattern id=&quot;seaGrid&quot; width=&quot;120&quot; height=&quot;120&quot; patternUnits=&quot;userSpaceOnUse&quot;&gt;&lt;path d=&quot;M120 0H0v120&quot; fill=&quot;none&quot; stroke=&quot;#e1efdf&quot; stroke-opacity=&quot;.08&quot; stroke-width=&quot;1&quot;/&gt;&lt;/pattern&gt;
+              &lt;pattern id=&quot;landDots&quot; width=&quot;22&quot; height=&quot;22&quot; patternUnits=&quot;userSpaceOnUse&quot;&gt;&lt;circle cx=&quot;4&quot; cy=&quot;5&quot; r=&quot;1&quot; fill=&quot;#4f6858&quot; opacity=&quot;.12&quot;/&gt;&lt;/pattern&gt;
+              &lt;filter id=&quot;softShadow&quot; x=&quot;-50%&quot; y=&quot;-50%&quot; width=&quot;200%&quot; height=&quot;220%&quot;&gt;&lt;feDropShadow dx=&quot;8&quot; dy=&quot;13&quot; stdDeviation=&quot;8&quot; flood-color=&quot;#173f3d&quot; flood-opacity=&quot;.24&quot;/&gt;&lt;/filter&gt;
+              &lt;filter id=&quot;labelShadow&quot; x=&quot;-30%&quot; y=&quot;-50%&quot; width=&quot;160%&quot; height=&quot;200%&quot;&gt;&lt;feDropShadow dx=&quot;0&quot; dy=&quot;4&quot; stdDeviation=&quot;5&quot; flood-color=&quot;#173f3d&quot; flood-opacity=&quot;.14&quot;/&gt;&lt;/filter&gt;
+              &lt;filter id=&quot;foamSoft&quot; x=&quot;-20%&quot; y=&quot;-40%&quot; width=&quot;140%&quot; height=&quot;180%&quot;&gt;&lt;feGaussianBlur stdDeviation=&quot;2.4&quot;/&gt;&lt;/filter&gt;
+              &lt;linearGradient id=&quot;seaDeepGradient&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;.85&quot; y2=&quot;.8&quot;&gt;&lt;stop stop-color=&quot;#123e4c&quot;/&gt;&lt;stop offset=&quot;.46&quot; stop-color=&quot;#2f6d72&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#6d9f96&quot;/&gt;&lt;/linearGradient&gt;
+              &lt;linearGradient id=&quot;foamGradient&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;1&quot; y2=&quot;0&quot;&gt;&lt;stop stop-color=&quot;#f9f6df&quot; stop-opacity=&quot;.2&quot;/&gt;&lt;stop offset=&quot;.5&quot; stop-color=&quot;#fffbea&quot; stop-opacity=&quot;.95&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#e7edda&quot; stop-opacity=&quot;.3&quot;/&gt;&lt;/linearGradient&gt;
+              &lt;radialGradient id=&quot;seaSheen&quot; cx=&quot;42%&quot; cy=&quot;34%&quot; r=&quot;72%&quot;&gt;&lt;stop stop-color=&quot;#d5eee0&quot; stop-opacity=&quot;.3&quot;/&gt;&lt;stop offset=&quot;.55&quot; stop-color=&quot;#9dc7b8&quot; stop-opacity=&quot;.1&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#0d3645&quot; stop-opacity=&quot;.26&quot;/&gt;&lt;/radialGradient&gt;
+              &lt;radialGradient id=&quot;islandTop&quot; cx=&quot;33%&quot; cy=&quot;25%&quot;&gt;&lt;stop stop-color=&quot;#bbc29a&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#68765f&quot;/&gt;&lt;/radialGradient&gt;
+              &lt;pattern id=&quot;swellTexture&quot; width=&quot;520&quot; height=&quot;210&quot; patternUnits=&quot;userSpaceOnUse&quot; patternTransform=&quot;rotate(-3)&quot;&gt;&lt;path d=&quot;M0 42q34-19 68 0t68 0 68 0 68 0 68 0 68 0 68 0 68 0M0 150q34-19 68 0t68 0 68 0 68 0 68 0 68 0 68 0 68 0&quot; fill=&quot;none&quot; stroke=&quot;#d9ebdc&quot; stroke-opacity=&quot;.19&quot; stroke-width=&quot;1.6&quot;/&gt;&lt;/pattern&gt;
+              &lt;pattern id=&quot;sandRipple&quot; width=&quot;55&quot; height=&quot;15&quot; patternUnits=&quot;userSpaceOnUse&quot; patternTransform=&quot;rotate(-8)&quot;&gt;&lt;path d=&quot;M0 10q14-7 28 0t28 0&quot; fill=&quot;none&quot; stroke=&quot;#8f774f&quot; stroke-opacity=&quot;.23&quot; stroke-width=&quot;1.2&quot;/&gt;&lt;/pattern&gt;
+              &lt;pattern id=&quot;grassTufts&quot; width=&quot;42&quot; height=&quot;34&quot; patternUnits=&quot;userSpaceOnUse&quot;&gt;&lt;path d=&quot;M8 29c2-8 3-11 7-15M15 29c-1-7 2-12 5-16M22 29c0-6 1-9 4-13&quot; fill=&quot;none&quot; stroke=&quot;#5e7654&quot; stroke-opacity=&quot;.48&quot; stroke-width=&quot;1&quot;/&gt;&lt;/pattern&gt;
+              &lt;path id=&quot;seaArea&quot; d=&quot;M0-20H885C875 70 810 98 824 150S720 202 746 250 817 273 792 319 698 339 744 383 879 401 853 455 796 490 846 530 879 568 860 614 880 672 829 733 783 786 810 835 757 891 816 946 848 1020H0Z&quot;/&gt;
+              &lt;clipPath id=&quot;seaClip&quot;&gt;&lt;use href=&quot;#seaArea&quot;/&gt;&lt;/clipPath&gt;
+              &lt;path id=&quot;coastLine&quot; d=&quot;M885-20C875 70 810 98 824 150S720 202 746 250 817 273 792 319 698 339 744 383 879 401 853 455 796 490 846 530 879 568 860 614 880 672 829 733 783 786 810 835 757 891 816 946 848 1020&quot;/&gt;
+            &lt;/defs&gt;
+
+            &lt;!-- 海域与深度层次 --&gt;
+            &lt;rect width=&quot;1600&quot; height=&quot;1000&quot; fill=&quot;url(#seaDeepGradient)&quot;/&gt;
+            &lt;rect width=&quot;1600&quot; height=&quot;1000&quot; fill=&quot;url(#seaSheen)&quot;/&gt;
+            &lt;rect width=&quot;1600&quot; height=&quot;1000&quot; fill=&quot;url(#seaGrid)&quot;/&gt;
+            &lt;path d=&quot;M0 740C310 650 515 700 760 540S1070 310 1600 290V1000H0Z&quot; fill=&quot;#103b48&quot; opacity=&quot;.14&quot;/&gt;
+            &lt;path d=&quot;M0 420C300 510 520 360 735 370S1040 540 1600 460&quot; fill=&quot;none&quot; stroke=&quot;#d5e4d6&quot; stroke-opacity=&quot;.1&quot; stroke-width=&quot;2&quot;/&gt;
+            &lt;path d=&quot;M0 425C300 515 520 365 735 375S1040 545 1600 465&quot; fill=&quot;none&quot; stroke=&quot;#d5e4d6&quot; stroke-opacity=&quot;.06&quot; stroke-width=&quot;18&quot;/&gt;
+
+            &lt;!-- 海底等深线，向岸逐级抬升 --&gt;
+            &lt;g fill=&quot;none&quot; stroke=&quot;#d4e7da&quot; stroke-linecap=&quot;round&quot; opacity=&quot;.24&quot;&gt;
+              &lt;use href=&quot;#coastLine&quot; transform=&quot;translate(-54 0)&quot; stroke-width=&quot;2.4&quot;/&gt;
+              &lt;use href=&quot;#coastLine&quot; transform=&quot;translate(-122 3)&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;17 9&quot;/&gt;
+              &lt;use href=&quot;#coastLine&quot; transform=&quot;translate(-207 2)&quot; stroke-width=&quot;1.7&quot; opacity=&quot;.7&quot;/&gt;
+              &lt;use href=&quot;#coastLine&quot; transform=&quot;translate(-306 4)&quot; stroke-width=&quot;1.4&quot; stroke-dasharray=&quot;4 14&quot; opacity=&quot;.55&quot;/&gt;
+            &lt;/g&gt;
+            &lt;g fill=&quot;#e8f0de&quot; opacity=&quot;.29&quot; font-size=&quot;10&quot; font-family=&quot;SFMono-Regular, Consolas, monospace&quot; letter-spacing=&quot;2&quot;&gt;
+              &lt;text x=&quot;75&quot; y=&quot;565&quot;&gt;-100 m&lt;/text&gt;&lt;text x=&quot;182&quot; y=&quot;490&quot;&gt;-50 m&lt;/text&gt;&lt;text x=&quot;313&quot; y=&quot;433&quot;&gt;-20 m&lt;/text&gt;&lt;text x=&quot;463&quot; y=&quot;377&quot;&gt;-10 m&lt;/text&gt;
+            &lt;/g&gt;
+            &lt;use href=&quot;#coastLine&quot; fill=&quot;none&quot; stroke=&quot;url(#shallowGradient)&quot; stroke-width=&quot;180&quot; opacity=&quot;.8&quot;/&gt;
+            &lt;path d=&quot;M0 870C260 825 454 869 614 839S845 784 971 800V1000H0Z&quot; fill=&quot;#a5d1bd&quot; opacity=&quot;.08&quot;/&gt;
+
+            &lt;!-- 动态海水：涌浪、沿岸流、潮汐推涌与波光 --&gt;
+            &lt;g class=&quot;sea-motion&quot; clip-path=&quot;url(#seaClip)&quot;&gt;
+              &lt;g class=&quot;tide-sheet&quot;&gt;
+                &lt;use href=&quot;#coastLine&quot; transform=&quot;translate(-44 0)&quot; fill=&quot;none&quot; stroke=&quot;#e0f0df&quot; stroke-width=&quot;78&quot; opacity=&quot;.11&quot;/&gt;
+                &lt;use href=&quot;#coastLine&quot; transform=&quot;translate(-21 0)&quot; fill=&quot;none&quot; stroke=&quot;#d7ebdb&quot; stroke-width=&quot;31&quot; opacity=&quot;.2&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g class=&quot;tide-sheet secondary&quot;&gt;
+                &lt;use href=&quot;#coastLine&quot; transform=&quot;translate(-96 4)&quot; fill=&quot;none&quot; stroke=&quot;#eff5de&quot; stroke-width=&quot;122&quot; opacity=&quot;.055&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g class=&quot;swell-line&quot; fill=&quot;none&quot; stroke=&quot;#e3efe2&quot; stroke-linecap=&quot;round&quot;&gt;
+                &lt;path d=&quot;M-50 64q46-27 92 0t92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0&quot; stroke-width=&quot;2.3&quot; opacity=&quot;.34&quot;/&gt;
+                &lt;path d=&quot;M-160 188q46-27 92 0t92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0&quot; stroke-width=&quot;1.7&quot; opacity=&quot;.26&quot;/&gt;
+                &lt;path d=&quot;M-76 500q46-27 92 0t92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0&quot; stroke-width=&quot;2&quot; opacity=&quot;.29&quot;/&gt;
+                &lt;path d=&quot;M-210 780q46-27 92 0t92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0&quot; stroke-width=&quot;1.6&quot; opacity=&quot;.21&quot;/&gt;
+                &lt;path d=&quot;M-30 910q46-27 92 0t92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0&quot; stroke-width=&quot;2.2&quot; opacity=&quot;.2&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g class=&quot;swell-line&quot; fill=&quot;none&quot; stroke=&quot;#f4f3df&quot; stroke-linecap=&quot;round&quot;&gt;
+                &lt;path d=&quot;M-40 282q46-23 92 0t92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0&quot; stroke-width=&quot;1.4&quot; opacity=&quot;.18&quot;/&gt;
+                &lt;path d=&quot;M-190 647q46-23 92 0t92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0 92 0&quot; stroke-width=&quot;1.8&quot; opacity=&quot;.16&quot;/&gt;
+              &lt;/g&gt;
+              &lt;rect x=&quot;-50&quot; y=&quot;-20&quot; width=&quot;1750&quot; height=&quot;1060&quot; fill=&quot;url(#swellTexture)&quot; opacity=&quot;.68&quot;/&gt;
+              &lt;g class=&quot;current-flow&quot; fill=&quot;none&quot; stroke=&quot;#eff1d9&quot; stroke-width=&quot;1.5&quot; stroke-linecap=&quot;round&quot; opacity=&quot;.46&quot;&gt;
+                &lt;use href=&quot;#coastLine&quot; transform=&quot;translate(-31 0)&quot;/&gt;
+                &lt;use href=&quot;#coastLine&quot; transform=&quot;translate(-73 2)&quot; opacity=&quot;.65&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g class=&quot;current-flow slow&quot; fill=&quot;none&quot; stroke=&quot;#d3e9dc&quot; stroke-width=&quot;1.1&quot; stroke-linecap=&quot;round&quot; opacity=&quot;.34&quot;&gt;
+                &lt;use href=&quot;#coastLine&quot; transform=&quot;translate(-157 3)&quot;/&gt;
+                &lt;use href=&quot;#coastLine&quot; transform=&quot;translate(-248 2)&quot; opacity=&quot;.65&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g class=&quot;sea-glint&quot; fill=&quot;none&quot; stroke=&quot;#f8f2d8&quot; stroke-linecap=&quot;round&quot; opacity=&quot;.2&quot;&gt;
+                &lt;path d=&quot;M46 735q28-9 57 0M328 587q34-10 69 0M188 906q28-9 57 0&quot; stroke-width=&quot;3&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g class=&quot;sea-glint delay&quot; fill=&quot;none&quot; stroke=&quot;#f8f2d8&quot; stroke-linecap=&quot;round&quot; opacity=&quot;.16&quot;&gt;
+                &lt;path d=&quot;M68 305q36-10 73 0M269 255q25-8 50 0M512 105q25-8 50 0&quot; stroke-width=&quot;2&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g fill=&quot;#f7f2db&quot; opacity=&quot;.45&quot;&gt;
+                &lt;circle cx=&quot;348&quot; cy=&quot;529&quot; r=&quot;1.8&quot;/&gt;&lt;circle cx=&quot;396&quot; cy=&quot;562&quot; r=&quot;1.2&quot;/&gt;&lt;circle cx=&quot;272&quot; cy=&quot;690&quot; r=&quot;1.6&quot;/&gt;&lt;circle cx=&quot;166&quot; cy=&quot;747&quot; r=&quot;1.3&quot;/&gt;&lt;circle cx=&quot;481&quot; cy=&quot;465&quot; r=&quot;1.5&quot;/&gt;
+              &lt;/g&gt;
+            &lt;/g&gt;
+
+            &lt;text x=&quot;100&quot; y=&quot;90&quot; class=&quot;sea-label&quot;&gt;西 · 海&lt;/text&gt;
+            &lt;text x=&quot;100&quot; y=&quot;120&quot; class=&quot;sea-label&quot; style=&quot;font-size:9px;letter-spacing:4px&quot;&gt;WEST SEA · MOVING CURRENT&lt;/text&gt;
+            &lt;g transform=&quot;translate(235 190)&quot; fill=&quot;none&quot; stroke=&quot;#eef2db&quot; stroke-linecap=&quot;round&quot; opacity=&quot;.52&quot;&gt;
+              &lt;path d=&quot;M0 0q41 8 84 2&quot; stroke-width=&quot;1.5&quot; stroke-dasharray=&quot;3 8&quot;/&gt;
+              &lt;path d=&quot;m72-3 12 5-11 6&quot; stroke-width=&quot;1.4&quot;/&gt;
+              &lt;text x=&quot;4&quot; y=&quot;-9&quot; fill=&quot;#eff4de&quot; stroke=&quot;none&quot; font-size=&quot;9&quot; letter-spacing=&quot;2&quot;&gt;沿岸流&lt;/text&gt;
+            &lt;/g&gt;
+
+            &lt;!-- 陆地主体与地形纹理 --&gt;
+            &lt;path d=&quot;M1600 0H885C875 70 810 98 824 150S720 202 746 250 817 273 792 319 698 339 744 383 879 401 853 455 796 490 846 530 879 568 860 614 880 672 829 733 783 786 810 835 757 891 816 946 848 1020H1600Z&quot; fill=&quot;url(#landGradient)&quot;/&gt;
+            &lt;rect x=&quot;890&quot; y=&quot;0&quot; width=&quot;710&quot; height=&quot;1000&quot; fill=&quot;url(#landGradient)&quot;/&gt;
+            &lt;path d=&quot;M1600 0H885C875 70 810 98 824 150S720 202 746 250 817 273 792 319 698 339 744 383 879 401 853 455 796 490 846 530 879 568 860 614 880 672 829 733 783 786 810 835 757 891 816 946 848 1020H1600Z&quot; fill=&quot;url(#landDots)&quot;/&gt;
+            &lt;rect x=&quot;890&quot; y=&quot;0&quot; width=&quot;710&quot; height=&quot;1000&quot; fill=&quot;url(#landDots)&quot;/&gt;
+            &lt;g fill=&quot;none&quot; stroke=&quot;#5f745d&quot; stroke-opacity=&quot;.19&quot; stroke-width=&quot;2&quot;&gt;
+              &lt;path d=&quot;M960 0c-5 105-68 98-42 177s112 90 70 169-36 149 35 185 85 154 22 222-2 170 53 247&quot;/&gt;
+              &lt;path d=&quot;M1040 0c-3 88-52 107-19 167s97 111 61 180-16 145 54 182 93 158 27 243 15 160 65 228&quot;/&gt;
+              &lt;path d=&quot;M1170 20c-56 101 22 134-12 218s-8 138 67 193 76 152 35 240 30 186 97 265&quot;/&gt;
+              &lt;path d=&quot;M1320 0c-85 117 29 171-21 265s21 170 91 219 51 168 15 246 38 160 108 236&quot;/&gt;
+              &lt;path d=&quot;M1490 0c-64 116 21 176-14 262s-3 174 72 229&quot;/&gt;
+            &lt;/g&gt;
+
+            &lt;!-- 北部基岩海岸：海蚀崖、平台、穴、拱桥、柱 --&gt;
+            &lt;path d=&quot;M852 78 806 143 766 185 749 230 779 266 787 304 749 338 758 375 826 395 849 357 815 328 842 284 817 245 801 211 842 160Z&quot; fill=&quot;url(#rockSide)&quot; filter=&quot;url(#softShadow)&quot;/&gt;
+            &lt;path d=&quot;M875 55 837 128 800 164 782 208 810 236 825 275 796 307 786 340 816 357 847 326 824 296 852 261 837 218 865 164 901 97Z&quot; fill=&quot;url(#rockTop)&quot;/&gt;
+            &lt;path d=&quot;M805 206 777 213 743 240 690 253 645 243 686 223 748 205Z&quot; fill=&quot;#9b9d80&quot;/&gt;
+            &lt;path d=&quot;M690 253 743 240 777 213 805 206 794 223 760 253 704 268Z&quot; fill=&quot;#66756a&quot;/&gt;
+            &lt;path d=&quot;M791 279q-27 4-30 29 25 2 38-13&quot; fill=&quot;#263f3d&quot;/&gt;
+            &lt;path d=&quot;M763 308q14-6 29 4&quot; fill=&quot;none&quot; stroke=&quot;#c2b58d&quot; stroke-width=&quot;4&quot;/&gt;
+            &lt;g filter=&quot;url(#softShadow)&quot;&gt;
+              &lt;path d=&quot;M625 330 667 343 652 389 608 379Z&quot; fill=&quot;url(#rockSide)&quot;/&gt;
+              &lt;path d=&quot;M625 330 643 310 680 319 667 343Z&quot; fill=&quot;#a59b79&quot;/&gt;
+              &lt;path d=&quot;M570 353 608 379 625 330 590 310Z&quot; fill=&quot;#657063&quot;/&gt;
+              &lt;path d=&quot;M570 353 590 310 625 330 608 379Z&quot; fill=&quot;#8e866b&quot;/&gt;
+              &lt;path d=&quot;M608 379 625 330 667 343 652 389Z M619 361 630 344 647 349 642 368Z&quot; fill=&quot;#8c856b&quot; fill-rule=&quot;evenodd&quot;/&gt;
+            &lt;/g&gt;
+            &lt;g filter=&quot;url(#softShadow)&quot;&gt;
+              &lt;path d=&quot;M454 287 482 298 472 353 439 342Z&quot; fill=&quot;url(#rockSide)&quot;/&gt;
+              &lt;path d=&quot;M454 287 466 270 492 278 482 298Z&quot; fill=&quot;#b0a17b&quot;/&gt;
+              &lt;path d=&quot;M482 298 492 278 503 327 472 353Z&quot; fill=&quot;#59665b&quot;/&gt;
+              &lt;ellipse cx=&quot;466&quot; cy=&quot;354&quot; rx=&quot;45&quot; ry=&quot;11&quot; fill=&quot;#224f55&quot; opacity=&quot;.35&quot;/&gt;
+            &lt;/g&gt;
+            &lt;g fill=&quot;none&quot; stroke=&quot;#e9e5cd&quot; stroke-width=&quot;3&quot; opacity=&quot;.75&quot;&gt;&lt;path d=&quot;M637 254q45 19 88 2&quot;/&gt;&lt;path d=&quot;M417 359q50 22 101 0&quot;/&gt;&lt;path d=&quot;M566 393q63 22 118-3&quot;/&gt;&lt;/g&gt;
+
+            &lt;!-- 离岸岛与连岛沙洲 --&gt;
+            &lt;path d=&quot;M839 543C760 526 666 509 550 526&quot; fill=&quot;none&quot; stroke=&quot;#dbc48e&quot; stroke-width=&quot;25&quot; stroke-linecap=&quot;round&quot; filter=&quot;url(#softShadow)&quot;/&gt;
+            &lt;path d=&quot;M839 538C750 522 660 515 550 522&quot; fill=&quot;none&quot; stroke=&quot;#eddbab&quot; stroke-width=&quot;9&quot; stroke-linecap=&quot;round&quot;/&gt;
+            &lt;g filter=&quot;url(#softShadow)&quot;&gt;
+              &lt;path d=&quot;M451 495 491 462 548 470 583 513 549 549 481 548 438 526Z&quot; fill=&quot;#6d7965&quot;/&gt;
+              &lt;path d=&quot;M451 486 493 450 549 461 583 502 548 530 483 529 438 512Z&quot; fill=&quot;url(#rockTop)&quot;/&gt;
+              &lt;path d=&quot;M474 483 504 467 537 475 549 496 521 510 486 504Z&quot; fill=&quot;#899471&quot;/&gt;
+              &lt;path d=&quot;M440 529q75 37 143-4&quot; fill=&quot;none&quot; stroke=&quot;#ecdfba&quot; stroke-width=&quot;6&quot;/&gt;
+            &lt;/g&gt;
+
+            &lt;!-- 中部砂质海岸、沙丘 --&gt;
+            &lt;path d=&quot;M847 504C890 554 902 580 883 627S893 690 848 733 811 774 816 794&quot; fill=&quot;none&quot; stroke=&quot;url(#sandGradient)&quot; stroke-width=&quot;55&quot; stroke-linecap=&quot;round&quot;/&gt;
+            &lt;path d=&quot;M837 507C876 555 886 582 870 626S879 686 835 728 802 767 808 793&quot; fill=&quot;none&quot; stroke=&quot;#f3e5bd&quot; stroke-width=&quot;7&quot; stroke-linecap=&quot;round&quot; opacity=&quot;.8&quot;/&gt;
+            &lt;g filter=&quot;url(#softShadow)&quot;&gt;
+              &lt;path d=&quot;M1010 566q62-107 129 0-61 55-129 0Z&quot; fill=&quot;url(#duneGradient)&quot;/&gt;
+              &lt;path d=&quot;M1090 610q75-122 146 0-69 56-146 0Z&quot; fill=&quot;url(#duneGradient)&quot;/&gt;
+              &lt;path d=&quot;M997 650q56-93 116 0-56 42-116 0Z&quot; fill=&quot;url(#duneGradient)&quot;/&gt;
+              &lt;path d=&quot;M1150 674q49-83 104 0-50 38-104 0Z&quot; fill=&quot;url(#duneGradient)&quot;/&gt;
+            &lt;/g&gt;
+            &lt;g stroke=&quot;#68785c&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;&gt;&lt;path d=&quot;m1080 524-4-14m4 14 7-12m-7 12-10-7M1190 563l-2-17m2 17 9-11M1060 622l-2-13m2 13 8-8M1245 656l-2-15&quot;/&gt;&lt;/g&gt;
+
+            &lt;!-- 沙嘴、沙坝与潟湖 --&gt;
+            &lt;path d=&quot;M858 657C779 652 698 647 632 670S553 719 586 744&quot; fill=&quot;none&quot; stroke=&quot;#a88955&quot; stroke-width=&quot;31&quot; stroke-linecap=&quot;round&quot; filter=&quot;url(#softShadow)&quot;/&gt;
+            &lt;path d=&quot;M858 648C779 643 698 638 632 661S553 710 586 735&quot; fill=&quot;none&quot; stroke=&quot;url(#sandGradient)&quot; stroke-width=&quot;25&quot; stroke-linecap=&quot;round&quot;/&gt;
+            &lt;path d=&quot;M581 735q-9 15 11 24&quot; fill=&quot;none&quot; stroke=&quot;#ead49e&quot; stroke-width=&quot;16&quot; stroke-linecap=&quot;round&quot;/&gt;
+            &lt;path d=&quot;M448 634C421 672 414 723 442 770S469 818 459 839&quot; fill=&quot;none&quot; stroke=&quot;#a88b5c&quot; stroke-width=&quot;40&quot; stroke-linecap=&quot;round&quot; filter=&quot;url(#softShadow)&quot;/&gt;
+            &lt;path d=&quot;M440 626C413 667 409 720 434 766S461 813 451 835&quot; fill=&quot;none&quot; stroke=&quot;url(#sandGradient)&quot; stroke-width=&quot;31&quot; stroke-linecap=&quot;round&quot;/&gt;
+            &lt;path d=&quot;M520 697C578 681 643 704 697 739S756 777 789 759&quot; fill=&quot;none&quot; stroke=&quot;#b9d0b9&quot; stroke-width=&quot;3&quot; stroke-dasharray=&quot;8 9&quot; opacity=&quot;.8&quot;/&gt;
+            &lt;path d=&quot;M512 760C580 746 649 764 707 799&quot; fill=&quot;none&quot; stroke=&quot;#d4e1c7&quot; stroke-width=&quot;2&quot; opacity=&quot;.6&quot;/&gt;
+
+            &lt;!-- 南部潮滩、三角洲、红树林 --&gt;
+            &lt;path d=&quot;M804 792C836 811 835 835 797 859S765 900 804 929 831 974 838 1000H1160C1080 949 1040 920 990 901S909 850 897 811Z&quot; fill=&quot;#a8a882&quot; opacity=&quot;.92&quot;/&gt;
+            &lt;g fill=&quot;none&quot; stroke=&quot;#d7cfaa&quot; stroke-width=&quot;4&quot; opacity=&quot;.65&quot;&gt;&lt;path d=&quot;M859 825q88 19 133 81&quot;/&gt;&lt;path d=&quot;M836 853q75 20 115 91&quot;/&gt;&lt;path d=&quot;M824 890q54 16 91 75&quot;/&gt;&lt;path d=&quot;M916 826q82 18 145 71&quot;/&gt;&lt;/g&gt;
+            &lt;path d=&quot;M1160 764C1080 784 1023 798 947 820S843 844 783 871&quot; fill=&quot;none&quot; stroke=&quot;#527f76&quot; stroke-width=&quot;40&quot; stroke-linecap=&quot;round&quot;/&gt;
+            &lt;path d=&quot;M1160 758C1080 778 1023 792 947 814S843 838 783 865&quot; fill=&quot;none&quot; stroke=&quot;#79a69a&quot; stroke-width=&quot;22&quot; stroke-linecap=&quot;round&quot;/&gt;
+            &lt;path d=&quot;M824 843 746 817 780 864 704 870 773 886 734 927 807 906 839 952 853 895 920 904 870 869 907 835Z&quot; fill=&quot;url(#sandGradient)&quot; filter=&quot;url(#softShadow)&quot;/&gt;
+            &lt;path d=&quot;M815 855 773 841M806 875l-65 1M820 888l-50 25M842 875l42 17&quot; stroke=&quot;#6e9a8c&quot; stroke-width=&quot;8&quot; stroke-linecap=&quot;round&quot;/&gt;
+            &lt;g fill=&quot;#536f50&quot; stroke=&quot;#405c48&quot; stroke-width=&quot;2&quot;&gt;
+              &lt;path d=&quot;M1050 914q-18-32 7-42 9-29 31-7 29-8 29 20 24 17 1 36-39 13-68-7Z&quot;/&gt;
+              &lt;path d=&quot;M1140 954q-17-35 11-43 14-28 34-3 28-4 25 23 20 20-5 34-38 8-65-11Z&quot;/&gt;
+              &lt;path d=&quot;M1001 960q-15-28 8-36 10-23 29-4 24-5 24 18 18 17-3 29-34 9-58-7Z&quot;/&gt;
+            &lt;/g&gt;
+            &lt;g stroke=&quot;#7b6547&quot; stroke-width=&quot;3&quot;&gt;&lt;path d=&quot;m1080 905-8 30m8-30 12 30M1173 945l-9 31m9-31 14 30M1029 952l-8 25m8-25 10 25&quot;/&gt;&lt;/g&gt;
+
+            &lt;!-- 珊瑚礁与浅海生态 --&gt;
+            &lt;g opacity=&quot;.9&quot;&gt;
+              &lt;path d=&quot;M258 842q28-39 58-4t58-2 57 9 51-5 49 21&quot; fill=&quot;none&quot; stroke=&quot;#d0c38f&quot; stroke-width=&quot;24&quot; stroke-linecap=&quot;round&quot;/&gt;
+              &lt;g fill=&quot;none&quot; stroke=&quot;#c98167&quot; stroke-width=&quot;5&quot; stroke-linecap=&quot;round&quot;&gt;&lt;path d=&quot;M295 833v-28m0 14-12-10m12 3 12-13M365 844v-35m0 17-15-12m15 4 13-12M441 855v-28m0 12-12-9&quot;/&gt;&lt;/g&gt;
+              &lt;g fill=&quot;#d7b78a&quot;&gt;&lt;circle cx=&quot;330&quot; cy=&quot;861&quot; r=&quot;11&quot;/&gt;&lt;circle cx=&quot;400&quot; cy=&quot;870&quot; r=&quot;14&quot;/&gt;&lt;circle cx=&quot;475&quot; cy=&quot;867&quot; r=&quot;9&quot;/&gt;&lt;/g&gt;
+              &lt;g fill=&quot;none&quot; stroke=&quot;#d8b58b&quot; stroke-width=&quot;2.5&quot; opacity=&quot;.9&quot;&gt;&lt;path d=&quot;M281 862q16-9 32 0M348 876q15-7 30 0M438 874q13-7 26 0&quot;/&gt;&lt;/g&gt;
+            &lt;/g&gt;
+
+            &lt;!-- 地形微细节：岩层、砾石、沙纹、盐沼与植被 --&gt;
+            &lt;g pointer-events=&quot;none&quot;&gt;
+              &lt;!-- 基岩层理与裂隙 --&gt;
+              &lt;g fill=&quot;none&quot; stroke=&quot;#4e5b50&quot; stroke-linecap=&quot;round&quot; opacity=&quot;.48&quot;&gt;
+                &lt;path d=&quot;m786 172 95-31M779 200l102-25M767 242l68-13M785 283l47-7M752 330l69-5&quot; stroke-width=&quot;3.2&quot;/&gt;
+                &lt;path d=&quot;m810 235-16 83m49-96-22 102m55-114-15 93&quot; stroke-width=&quot;2.2&quot;/&gt;
+              &lt;/g&gt;
+              &lt;!-- 崖脚砾石与崩塌岩块 --&gt;
+              &lt;g fill=&quot;#817c67&quot; stroke=&quot;#5c675a&quot; stroke-width=&quot;1.2&quot;&gt;
+                &lt;path d=&quot;m728 365 15-6 12 12-19 8Z&quot;/&gt;&lt;path d=&quot;m747 378 13-4 9 11-17 7Z&quot;/&gt;&lt;path d=&quot;m704 371 9-3 6 8-10 5Z&quot;/&gt;
+                &lt;path d=&quot;m563 395 10-3 7 8-11 4Z&quot;/&gt;&lt;path d=&quot;m438 352 11-5 10 8-14 6Z&quot;/&gt;
+              &lt;/g&gt;
+              &lt;!-- 海蚀平台冲刷沟与潮池 --&gt;
+              &lt;g fill=&quot;none&quot; stroke=&quot;#d7d1ac&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot; opacity=&quot;.65&quot;&gt;
+                &lt;path d=&quot;M660 247q27 22 69 6M581 289q33 17 71 2M524 386q38 17 81 3&quot;/&gt;
+                &lt;path d=&quot;M618 264q-11 16 2 25M572 320q12 15 1 24&quot; stroke-width=&quot;2&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g fill=&quot;#6d8f89&quot; opacity=&quot;.65&quot;&gt;&lt;ellipse cx=&quot;676&quot; cy=&quot;270&quot; rx=&quot;14&quot; ry=&quot;5&quot;/&gt;&lt;ellipse cx=&quot;603&quot; cy=&quot;307&quot; rx=&quot;9&quot; ry=&quot;3.5&quot;/&gt;&lt;ellipse cx=&quot;540&quot; cy=&quot;402&quot; rx=&quot;13&quot; ry=&quot;4&quot;/&gt;&lt;/g&gt;
+              &lt;!-- 沙纹、砾石滩与湿沙痕迹 --&gt;
+              &lt;path d=&quot;M854 518C890 562 900 589 881 629S895 690 852 732 815 775 817 789&quot; fill=&quot;none&quot; stroke=&quot;url(#sandRipple)&quot; stroke-width=&quot;40&quot; opacity=&quot;.9&quot;/&gt;
+              &lt;g fill=&quot;#9a8057&quot; opacity=&quot;.8&quot;&gt;
+                &lt;ellipse cx=&quot;858&quot; cy=&quot;666&quot; rx=&quot;3&quot; ry=&quot;1.5&quot;/&gt;&lt;ellipse cx=&quot;866&quot; cy=&quot;683&quot; rx=&quot;2.5&quot; ry=&quot;1.2&quot;/&gt;&lt;ellipse cx=&quot;842&quot; cy=&quot;709&quot; rx=&quot;2&quot; ry=&quot;1&quot;/&gt;&lt;ellipse cx=&quot;842&quot; cy=&quot;583&quot; rx=&quot;2.5&quot; ry=&quot;1.2&quot;/&gt;
+                &lt;ellipse cx=&quot;690&quot; cy=&quot;646&quot; rx=&quot;2&quot; ry=&quot;1&quot;/&gt;&lt;ellipse cx=&quot;641&quot; cy=&quot;654&quot; rx=&quot;2.5&quot; ry=&quot;1.1&quot;/&gt;&lt;ellipse cx=&quot;731&quot; cy=&quot;661&quot; rx=&quot;2&quot; ry=&quot;1&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g fill=&quot;none&quot; stroke=&quot;#a38754&quot; stroke-width=&quot;1.4&quot; opacity=&quot;.52&quot;&gt;
+                &lt;path d=&quot;M625 659q40-11 82-2M587 693q24 15 51 8M519 696q47-13 96-1M459 739q32-11 65-2&quot;/&gt;
+              &lt;/g&gt;
+              &lt;path d=&quot;M861 621C893 671 856 708 827 748&quot; fill=&quot;none&quot; stroke=&quot;#6fa69d&quot; stroke-width=&quot;16&quot; opacity=&quot;.34&quot; class=&quot;wet-sand&quot;/&gt;
+              &lt;path d=&quot;M872 578C903 592 900 610 890 631&quot; fill=&quot;none&quot; stroke=&quot;#6fa69d&quot; stroke-width=&quot;26&quot; opacity=&quot;.23&quot; class=&quot;wet-sand delayed&quot;/&gt;
+              &lt;!-- 沙丘脊线与植被 --&gt;
+              &lt;g fill=&quot;none&quot; stroke=&quot;#8c774f&quot; stroke-width=&quot;1.5&quot; opacity=&quot;.42&quot;&gt;
+                &lt;path d=&quot;M1040 581q33-22 69 2M1117 625q42-28 86 5M1023 660q28-20 55 0M1172 676q26-21 54 1&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g fill=&quot;#5e7653&quot; opacity=&quot;.81&quot;&gt;
+                &lt;circle cx=&quot;1071&quot; cy=&quot;527&quot; r=&quot;7&quot;/&gt;&lt;circle cx=&quot;1085&quot; cy=&quot;523&quot; r=&quot;9&quot;/&gt;&lt;circle cx=&quot;1098&quot; cy=&quot;528&quot; r=&quot;6&quot;/&gt;
+                &lt;circle cx=&quot;1179&quot; cy=&quot;570&quot; r=&quot;7&quot;/&gt;&lt;circle cx=&quot;1192&quot; cy=&quot;565&quot; r=&quot;9&quot;/&gt;&lt;circle cx=&quot;1205&quot; cy=&quot;572&quot; r=&quot;5&quot;/&gt;
+                &lt;circle cx=&quot;1050&quot; cy=&quot;640&quot; r=&quot;6&quot;/&gt;&lt;circle cx=&quot;1062&quot; cy=&quot;636&quot; r=&quot;8&quot;/&gt;&lt;circle cx=&quot;1270&quot; cy=&quot;670&quot; r=&quot;7&quot;/&gt;
+                &lt;circle cx=&quot;1260&quot; cy=&quot;662&quot; r=&quot;5&quot;/&gt;&lt;circle cx=&quot;1301&quot; cy=&quot;690&quot; r=&quot;8&quot;/&gt;&lt;circle cx=&quot;1316&quot; cy=&quot;688&quot; r=&quot;6&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g stroke=&quot;#776444&quot; stroke-width=&quot;1.7&quot; opacity=&quot;.7&quot;&gt;&lt;path d=&quot;m1071 534-2 10m12-16-1 13m12-8-2 10M1185 576v11m8-17-1 14M1057 647v8m8-13v11M1300 696v9m10-12v11&quot;/&gt;&lt;/g&gt;
+              &lt;!-- 潮滩盐沼与泥裂 --&gt;
+              &lt;g fill=&quot;none&quot; stroke=&quot;#6f815d&quot; stroke-width=&quot;1.2&quot; opacity=&quot;.58&quot;&gt;
+                &lt;path d=&quot;M880 820q6-16 12-1m-6 7q6-17 13-2M926 840q6-16 12-1m-5 6q6-16 12-2M972 859q5-15 12-1m-6 7q6-16 12-2M1032 880q5-14 11-1&quot;/&gt;
+                &lt;path d=&quot;m856 831 16 8-7 17 20 4-4 17M904 869l19 7-6 16 15 9&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g fill=&quot;#637752&quot; opacity=&quot;.7&quot;&gt;&lt;circle cx=&quot;893&quot; cy=&quot;813&quot; r=&quot;5&quot;/&gt;&lt;circle cx=&quot;900&quot; cy=&quot;816&quot; r=&quot;7&quot;/&gt;&lt;circle cx=&quot;949&quot; cy=&quot;832&quot; r=&quot;6&quot;/&gt;&lt;circle cx=&quot;1014&quot; cy=&quot;862&quot; r=&quot;5&quot;/&gt;&lt;/g&gt;
+              &lt;!-- 三角洲分流与农田纹理 --&gt;
+              &lt;g fill=&quot;none&quot; stroke=&quot;#789b8c&quot; stroke-width=&quot;2.2&quot; opacity=&quot;.65&quot;&gt;&lt;path d=&quot;M798 856q-43-11-74-4M816 874l-69 14M811 892l-41 28M840 868l45 16&quot;/&gt;&lt;/g&gt;
+              &lt;g fill=&quot;none&quot; stroke=&quot;#877a55&quot; stroke-width=&quot;1&quot; opacity=&quot;.31&quot;&gt;&lt;path d=&quot;M923 886l76 42M951 875l85 38M982 902l74 39M938 920l63 32&quot;/&gt;&lt;/g&gt;
+              &lt;!-- 东部地形等高线与地貌阴影 --&gt;
+              &lt;g fill=&quot;none&quot; stroke=&quot;#526a55&quot; stroke-width=&quot;1.4&quot; opacity=&quot;.16&quot;&gt;&lt;path d=&quot;M1180 90c-55 90 35 129 0 221s0 153 70 190M1330 50c-63 91 20 147-18 230s26 158 98 193M1445 390c-53 73 6 119-17 188s29 133 79 160&quot;/&gt;&lt;/g&gt;
+              &lt;path d=&quot;M1600 0v18C1390 112 1190 70 1070 206S897 390 850 530&quot; fill=&quot;none&quot; stroke=&quot;#e8e2c5&quot; stroke-opacity=&quot;.12&quot; stroke-width=&quot;10&quot;/&gt;
+            &lt;/g&gt;
+
+            &lt;!-- 海水冲刷：涌浪推岸、泡沫带、翻卷浪与岩脚飞溅 --&gt;
+            &lt;g class=&quot;sea-motion&quot; pointer-events=&quot;none&quot;&gt;
+              &lt;g clip-path=&quot;url(#seaClip)&quot; filter=&quot;url(#foamSoft)&quot;&gt;
+                &lt;use href=&quot;#coastLine&quot; class=&quot;surf-line&quot; fill=&quot;none&quot; stroke=&quot;url(#foamGradient)&quot; stroke-width=&quot;11&quot; opacity=&quot;.26&quot; stroke-dasharray=&quot;34 29 8 48&quot;/&gt;
+                &lt;use href=&quot;#coastLine&quot; class=&quot;surf-line delay-one&quot; fill=&quot;none&quot; stroke=&quot;#fff9e7&quot; stroke-width=&quot;5&quot; opacity=&quot;.23&quot; stroke-dasharray=&quot;7 61&quot;/&gt;
+                &lt;use href=&quot;#coastLine&quot; class=&quot;surf-line delay-two&quot; fill=&quot;none&quot; stroke=&quot;#eaf0dc&quot; stroke-width=&quot;18&quot; opacity=&quot;.09&quot; stroke-dasharray=&quot;94 76&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g clip-path=&quot;url(#seaClip)&quot;&gt;
+                &lt;use href=&quot;#coastLine&quot; fill=&quot;none&quot; stroke=&quot;#fffced&quot; stroke-width=&quot;2.2&quot; stroke-dasharray=&quot;22 31 7 48&quot; opacity=&quot;.88&quot; class=&quot;shore-foam&quot;/&gt;
+                &lt;use href=&quot;#coastLine&quot; fill=&quot;none&quot; stroke=&quot;#fffbe8&quot; stroke-width=&quot;1.3&quot; stroke-dasharray=&quot;9 73&quot; opacity=&quot;.65&quot; class=&quot;shore-foam delay&quot;/&gt;
+                &lt;g fill=&quot;none&quot; stroke=&quot;#fff9e9&quot; stroke-linecap=&quot;round&quot;&gt;
+                  &lt;path class=&quot;breaker&quot; d=&quot;M746 236q-21 16-39 3 19-4 27-17 1 9 12 14Z&quot; stroke-width=&quot;1.4&quot; opacity=&quot;.8&quot;/&gt;
+                  &lt;path class=&quot;breaker&quot; d=&quot;M718 310q-23 13-42-1 18-2 29-14 2 8 13 15Z&quot; stroke-width=&quot;1.4&quot; opacity=&quot;.8&quot;/&gt;
+                  &lt;path class=&quot;breaker&quot; d=&quot;M867 436q-25 15-44 0 20-3 31-16 1 9 13 16Z&quot; stroke-width=&quot;1.4&quot; opacity=&quot;.8&quot;/&gt;
+                  &lt;path class=&quot;breaker&quot; d=&quot;M854 590q-27 16-47 0 22-2 33-17 2 10 14 17Z&quot; stroke-width=&quot;1.5&quot; opacity=&quot;.82&quot;/&gt;
+                  &lt;path class=&quot;breaker&quot; d=&quot;M813 761q-26 16-46 1 21-3 32-17 2 9 14 16Z&quot; stroke-width=&quot;1.4&quot; opacity=&quot;.72&quot;/&gt;
+                  &lt;path class=&quot;breaker&quot; d=&quot;M791 852q-25 16-44 1 20-3 31-17 2 9 13 16Z&quot; stroke-width=&quot;1.3&quot; opacity=&quot;.65&quot;/&gt;
+                &lt;/g&gt;
+                &lt;g class=&quot;shore-foam&quot; fill=&quot;#fffbea&quot;&gt;
+                  &lt;ellipse cx=&quot;770&quot; cy=&quot;246&quot; rx=&quot;16&quot; ry=&quot;3.5&quot; opacity=&quot;.7&quot;/&gt;&lt;ellipse cx=&quot;746&quot; cy=&quot;266&quot; rx=&quot;8&quot; ry=&quot;2&quot; opacity=&quot;.55&quot;/&gt;
+                  &lt;ellipse cx=&quot;729&quot; cy=&quot;347&quot; rx=&quot;19&quot; ry=&quot;4&quot; opacity=&quot;.6&quot;/&gt;&lt;ellipse cx=&quot;711&quot; cy=&quot;331&quot; rx=&quot;7&quot; ry=&quot;2&quot; opacity=&quot;.45&quot;/&gt;
+                  &lt;ellipse cx=&quot;851&quot; cy=&quot;414&quot; rx=&quot;12&quot; ry=&quot;3.2&quot; opacity=&quot;.58&quot;/&gt;&lt;ellipse cx=&quot;842&quot; cy=&quot;479&quot; rx=&quot;10&quot; ry=&quot;2.5&quot; opacity=&quot;.48&quot;/&gt;
+                  &lt;ellipse cx=&quot;842&quot; cy=&quot;607&quot; rx=&quot;19&quot; ry=&quot;4.2&quot; opacity=&quot;.64&quot;/&gt;&lt;ellipse cx=&quot;852&quot; cy=&quot;643&quot; rx=&quot;9&quot; ry=&quot;2.4&quot; opacity=&quot;.44&quot;/&gt;
+                  &lt;ellipse cx=&quot;813&quot; cy=&quot;770&quot; rx=&quot;16&quot; ry=&quot;3.8&quot; opacity=&quot;.6&quot;/&gt;&lt;ellipse cx=&quot;789&quot; cy=&quot;836&quot; rx=&quot;12&quot; ry=&quot;3.2&quot; opacity=&quot;.5&quot;/&gt;
+                &lt;/g&gt;
+              &lt;/g&gt;
+              &lt;!-- 岩脚冲击飞溅 --&gt;
+              &lt;g transform=&quot;translate(777 329)&quot; fill=&quot;#fffbeb&quot;&gt;
+                &lt;ellipse class=&quot;splash-ring&quot; cx=&quot;0&quot; cy=&quot;4&quot; rx=&quot;27&quot; ry=&quot;6&quot; fill=&quot;none&quot; stroke=&quot;#fff9e6&quot; stroke-width=&quot;1.5&quot;/&gt;
+                &lt;circle class=&quot;splash-drop&quot; cx=&quot;-13&quot; cy=&quot;-2&quot; r=&quot;2.6&quot; style=&quot;--sx:-11px;--ex:-27px&quot;/&gt;
+                &lt;circle class=&quot;splash-drop&quot; cx=&quot;-5&quot; cy=&quot;1&quot; r=&quot;1.8&quot; style=&quot;--sx:-3px;--ex:-15px&quot;/&gt;
+                &lt;circle class=&quot;splash-drop&quot; cx=&quot;2&quot; cy=&quot;-1&quot; r=&quot;2.2&quot; style=&quot;--sx:3px;--ex:5px&quot;/&gt;
+                &lt;circle class=&quot;splash-drop&quot; cx=&quot;10&quot; cy=&quot;2&quot; r=&quot;1.5&quot; style=&quot;--sx:8px;--ex:22px&quot;/&gt;
+                &lt;circle class=&quot;splash-drop&quot; cx=&quot;16&quot; cy=&quot;4&quot; r=&quot;1.1&quot; style=&quot;--sx:12px;--ex:33px&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g transform=&quot;translate(754 373)&quot; fill=&quot;#fffbeb&quot;&gt;
+                &lt;ellipse class=&quot;splash-ring&quot; cx=&quot;0&quot; cy=&quot;3&quot; rx=&quot;19&quot; ry=&quot;4.5&quot; fill=&quot;none&quot; stroke=&quot;#fff9e6&quot; stroke-width=&quot;1.2&quot; style=&quot;animation-delay:-1.8s&quot;/&gt;
+                &lt;circle class=&quot;splash-drop&quot; cx=&quot;-8&quot; cy=&quot;0&quot; r=&quot;2&quot; style=&quot;--sx:-9px;--ex:-19px;animation-delay:-1.4s&quot;/&gt;
+                &lt;circle class=&quot;splash-drop&quot; cx=&quot;0&quot; cy=&quot;1&quot; r=&quot;1.6&quot; style=&quot;--sx:2px;--ex:7px;animation-delay:-1s&quot;/&gt;
+                &lt;circle class=&quot;splash-drop&quot; cx=&quot;9&quot; cy=&quot;2&quot; r=&quot;1.3&quot; style=&quot;--sx:8px;--ex:20px;animation-delay:-2.2s&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g transform=&quot;translate(475 345)&quot; fill=&quot;#fffbeb&quot;&gt;
+                &lt;ellipse class=&quot;splash-ring&quot; cx=&quot;0&quot; cy=&quot;4&quot; rx=&quot;24&quot; ry=&quot;5&quot; fill=&quot;none&quot; stroke=&quot;#fff9e6&quot; stroke-width=&quot;1.3&quot; style=&quot;animation-delay:-2.4s&quot;/&gt;
+                &lt;circle class=&quot;splash-drop&quot; cx=&quot;-12&quot; cy=&quot;0&quot; r=&quot;2.2&quot; style=&quot;--sx:-10px;--ex:-25px;animation-delay:-1.2s&quot;/&gt;
+                &lt;circle class=&quot;splash-drop&quot; cx=&quot;-2&quot; cy=&quot;1&quot; r=&quot;1.7&quot; style=&quot;--sx:-2px;--ex:2px;animation-delay:-2.7s&quot;/&gt;
+                &lt;circle class=&quot;splash-drop&quot; cx=&quot;9&quot; cy=&quot;2&quot; r=&quot;2&quot; style=&quot;--sx:7px;--ex:21px;animation-delay:-0.8s&quot;/&gt;
+              &lt;/g&gt;
+              &lt;g transform=&quot;translate(865 620)&quot; fill=&quot;#fffbeb&quot;&gt;
+                &lt;ellipse class=&quot;splash-ring&quot; cx=&quot;0&quot; cy=&quot;4&quot; rx=&quot;30&quot; ry=&quot;6&quot; fill=&quot;none&quot; stroke=&quot;#fff9e6&quot; stroke-width=&quot;1.4&quot; style=&quot;animation-delay:-3.1s&quot;/&gt;
+                &lt;circle class=&quot;splash-drop&quot; cx=&quot;-15&quot; cy=&quot;0&quot; r=&quot;2&quot; style=&quot;--sx:-15px;--ex:-34px;animation-delay:-2.5s&quot;/&gt;
+                &lt;circle class=&quot;splash-drop&quot; cx=&quot;-5&quot; cy=&quot;2&quot; r=&quot;1.5&quot; style=&quot;--sx:-3px;--ex:-11px;animation-delay:-1.7s&quot;/&gt;
+                &lt;circle class=&quot;splash-drop&quot; cx=&quot;5&quot; cy=&quot;1&quot; r=&quot;1.8&quot; style=&quot;--sx:4px;--ex:12px;animation-delay:-0.7s&quot;/&gt;
+                &lt;circle class=&quot;splash-drop&quot; cx=&quot;14&quot; cy=&quot;3&quot; r=&quot;1.2&quot; style=&quot;--sx:11px;--ex:29px;animation-delay:-2.9s&quot;/&gt;
+              &lt;/g&gt;
+            &lt;/g&gt;
+
+            &lt;!-- 区域文字与方向 --&gt;
+            &lt;text x=&quot;1390&quot; y=&quot;330&quot; class=&quot;zone-caption&quot; transform=&quot;rotate(90 1390 330)&quot;&gt;基岩侵蚀海岸&lt;/text&gt;
+            &lt;text x=&quot;1390&quot; y=&quot;555&quot; class=&quot;zone-caption&quot; transform=&quot;rotate(90 1390 555)&quot;&gt;砂质堆积海岸&lt;/text&gt;
+            &lt;text x=&quot;1390&quot; y=&quot;845&quot; class=&quot;zone-caption&quot; transform=&quot;rotate(90 1390 845)&quot;&gt;河口与生物海岸&lt;/text&gt;
+            &lt;g transform=&quot;translate(1490 85)&quot; aria-hidden=&quot;true&quot;&gt;
+              &lt;circle r=&quot;43&quot; fill=&quot;rgba(255,253,247,.7)&quot; stroke=&quot;rgba(23,63,61,.2)&quot;/&gt;
+              &lt;path d=&quot;M0-30 8-4 0-9-8-4Z&quot; fill=&quot;#173f3d&quot;/&gt;&lt;path d=&quot;M0 30 8 4 0 9-8 4Z&quot; fill=&quot;#c65f42&quot; opacity=&quot;.6&quot;/&gt;
+              &lt;text y=&quot;-48&quot; text-anchor=&quot;middle&quot; fill=&quot;#173f3d&quot; font-size=&quot;13&quot; font-weight=&quot;700&quot;&gt;北 N&lt;/text&gt;
+              &lt;text y=&quot;57&quot; text-anchor=&quot;middle&quot; fill=&quot;#173f3d&quot; font-size=&quot;10&quot;&gt;南 S&lt;/text&gt;
+              &lt;text x=&quot;-57&quot; y=&quot;4&quot; text-anchor=&quot;middle&quot; fill=&quot;#173f3d&quot; font-size=&quot;10&quot;&gt;西&lt;/text&gt;
+              &lt;text x=&quot;57&quot; y=&quot;4&quot; text-anchor=&quot;middle&quot; fill=&quot;#173f3d&quot; font-size=&quot;10&quot;&gt;东&lt;/text&gt;
+            &lt;/g&gt;
+
+            &lt;!-- 可点击地貌标注 --&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;headland&quot; data-category=&quot;erosion&quot; data-x=&quot;755&quot; data-y=&quot;177&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看岬角详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M1000 108H860L755 177&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;755&quot; cy=&quot;177&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;755&quot; cy=&quot;177&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;1000&quot; y=&quot;86&quot; width=&quot;136&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;1013&quot; y=&quot;113&quot;&gt;01&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;1043&quot; y=&quot;114&quot;&gt;岬角&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;bay&quot; data-category=&quot;erosion&quot; data-x=&quot;849&quot; data-y=&quot;407&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看海湾详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M1050 430H938L849 407&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;849&quot; cy=&quot;407&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;849&quot; cy=&quot;407&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;1050&quot; y=&quot;408&quot; width=&quot;136&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;1063&quot; y=&quot;435&quot;&gt;02&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;1093&quot; y=&quot;436&quot;&gt;海湾&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;cliff&quot; data-category=&quot;erosion&quot; data-x=&quot;816&quot; data-y=&quot;230&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看海蚀崖详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M1040 220H922L816 230&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;816&quot; cy=&quot;230&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;816&quot; cy=&quot;230&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;1040&quot; y=&quot;198&quot; width=&quot;150&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;1053&quot; y=&quot;225&quot;&gt;03&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;1083&quot; y=&quot;226&quot;&gt;海蚀崖&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;platform&quot; data-category=&quot;erosion&quot; data-x=&quot;709&quot; data-y=&quot;247&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看海蚀平台详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M360 150H530L709 247&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;709&quot; cy=&quot;247&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;709&quot; cy=&quot;247&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;190&quot; y=&quot;128&quot; width=&quot;170&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;203&quot; y=&quot;155&quot;&gt;04&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;233&quot; y=&quot;156&quot;&gt;海蚀平台&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;cave&quot; data-category=&quot;erosion&quot; data-x=&quot;775&quot; data-y=&quot;303&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看海蚀穴详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M1050 305H905L775 303&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;775&quot; cy=&quot;303&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;775&quot; cy=&quot;303&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;1050&quot; y=&quot;283&quot; width=&quot;150&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;1063&quot; y=&quot;310&quot;&gt;05&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;1093&quot; y=&quot;311&quot;&gt;海蚀穴&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;arch&quot; data-category=&quot;erosion&quot; data-x=&quot;624&quot; data-y=&quot;354&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看海蚀拱桥详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M360 398H495L624 354&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;624&quot; cy=&quot;354&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;624&quot; cy=&quot;354&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;190&quot; y=&quot;376&quot; width=&quot;170&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;203&quot; y=&quot;403&quot;&gt;06&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;233&quot; y=&quot;404&quot;&gt;海蚀拱桥&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;stack&quot; data-category=&quot;erosion&quot; data-x=&quot;469&quot; data-y=&quot;303&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看海蚀柱详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M330 273H390L469 303&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;469&quot; cy=&quot;303&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;469&quot; cy=&quot;303&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;180&quot; y=&quot;251&quot; width=&quot;150&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;193&quot; y=&quot;278&quot;&gt;07&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;223&quot; y=&quot;279&quot;&gt;海蚀柱&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;beach&quot; data-category=&quot;deposition&quot; data-x=&quot;877&quot; data-y=&quot;581&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看海滩详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M1080 524H976L877 581&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;877&quot; cy=&quot;581&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;877&quot; cy=&quot;581&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;1080&quot; y=&quot;502&quot; width=&quot;136&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;1093&quot; y=&quot;529&quot;&gt;08&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;1123&quot; y=&quot;530&quot;&gt;海滩&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;dune&quot; data-category=&quot;deposition&quot; data-x=&quot;1158&quot; data-y=&quot;580&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看滨海沙丘详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M1300 620h-50l-92-40&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;1158&quot; cy=&quot;580&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;1158&quot; cy=&quot;580&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;1300&quot; y=&quot;598&quot; width=&quot;170&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;1313&quot; y=&quot;625&quot;&gt;09&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;1343&quot; y=&quot;626&quot;&gt;滨海沙丘&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;spit&quot; data-category=&quot;deposition&quot; data-x=&quot;659&quot; data-y=&quot;661&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看沙嘴详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M520 608H574L659 661&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;659&quot; cy=&quot;661&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;659&quot; cy=&quot;661&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;384&quot; y=&quot;586&quot; width=&quot;136&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;397&quot; y=&quot;613&quot;&gt;10&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;427&quot; y=&quot;614&quot;&gt;沙嘴&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;barrier&quot; data-category=&quot;deposition&quot; data-x=&quot;426&quot; data-y=&quot;714&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看沙坝详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M320 720h50l56-6&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;426&quot; cy=&quot;714&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;426&quot; cy=&quot;714&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;184&quot; y=&quot;698&quot; width=&quot;136&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;197&quot; y=&quot;725&quot;&gt;11&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;227&quot; y=&quot;726&quot;&gt;沙坝&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;lagoon&quot; data-category=&quot;deposition&quot; data-x=&quot;628&quot; data-y=&quot;744&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看潟湖详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M660 804v-25l-32-35&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;628&quot; cy=&quot;744&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;628&quot; cy=&quot;744&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;592&quot; y=&quot;804&quot; width=&quot;136&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;605&quot; y=&quot;831&quot;&gt;12&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;635&quot; y=&quot;832&quot;&gt;潟湖&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;tombolo&quot; data-category=&quot;deposition&quot; data-x=&quot;680&quot; data-y=&quot;526&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看连岛沙洲详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M868 474H778L680 526&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;680&quot; cy=&quot;526&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;680&quot; cy=&quot;526&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;868&quot; y=&quot;452&quot; width=&quot;170&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;881&quot; y=&quot;479&quot;&gt;13&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;911&quot; y=&quot;480&quot;&gt;连岛沙洲&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;island&quot; data-category=&quot;deposition&quot; data-x=&quot;510&quot; data-y=&quot;487&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看离岸岛详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M350 472h64l96 15&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;510&quot; cy=&quot;487&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;510&quot; cy=&quot;487&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;200&quot; y=&quot;450&quot; width=&quot;150&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;213&quot; y=&quot;477&quot;&gt;14&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;243&quot; y=&quot;478&quot;&gt;离岸岛&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;tidal&quot; data-category=&quot;eco&quot; data-x=&quot;981&quot; data-y=&quot;871&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看潮滩详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M1250 805h-95L981 871&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;981&quot; cy=&quot;871&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;981&quot; cy=&quot;871&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;1250&quot; y=&quot;783&quot; width=&quot;136&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;1263&quot; y=&quot;810&quot;&gt;15&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;1293&quot; y=&quot;811&quot;&gt;潮滩&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;delta&quot; data-category=&quot;eco&quot; data-x=&quot;799&quot; data-y=&quot;878&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看河口三角洲详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M900 957v-32l-101-47&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;799&quot; cy=&quot;878&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;799&quot; cy=&quot;878&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;900&quot; y=&quot;935&quot; width=&quot;184&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;913&quot; y=&quot;962&quot;&gt;16&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;943&quot; y=&quot;963&quot;&gt;河口三角洲&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;reef&quot; data-category=&quot;eco&quot; data-x=&quot;363&quot; data-y=&quot;843&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看珊瑚礁详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M340 930v-33l23-54&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;363&quot; cy=&quot;843&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;363&quot; cy=&quot;843&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;255&quot; y=&quot;930&quot; width=&quot;170&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;268&quot; y=&quot;957&quot;&gt;17&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;298&quot; y=&quot;958&quot;&gt;珊瑚礁&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+            &lt;g class=&quot;hotspot&quot; data-id=&quot;mangrove&quot; data-category=&quot;eco&quot; data-x=&quot;1090&quot; data-y=&quot;909&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;查看红树林海岸详解&quot;&gt;
+              &lt;path class=&quot;leader&quot; d=&quot;M1270 938h-75l-105-29&quot;/&gt;&lt;circle class=&quot;anchor-ring&quot; cx=&quot;1090&quot; cy=&quot;909&quot; r=&quot;7&quot;/&gt;&lt;circle class=&quot;anchor-core&quot; cx=&quot;1090&quot; cy=&quot;909&quot; r=&quot;2.5&quot;/&gt;
+              &lt;g filter=&quot;url(#labelShadow)&quot;&gt;&lt;rect class=&quot;label-bg&quot; x=&quot;1270&quot; y=&quot;916&quot; width=&quot;198&quot; height=&quot;44&quot; rx=&quot;5&quot;/&gt;&lt;text class=&quot;label-number&quot; x=&quot;1283&quot; y=&quot;943&quot;&gt;18&lt;/text&gt;&lt;text class=&quot;label-name&quot; x=&quot;1313&quot; y=&quot;944&quot;&gt;红树林海岸&lt;/text&gt;&lt;/g&gt;
+            &lt;/g&gt;
+          &lt;/svg&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;map-note&quot;&gt;&lt;span class=&quot;pulse&quot;&gt;&lt;/span&gt;&lt;span class=&quot;note-desktop&quot;&gt;点击编号或地貌名称，进入近景与剖面&lt;/span&gt;&lt;span class=&quot;note-mobile&quot;&gt;左右滑动查看全图 · 点击名称进入详解&lt;/span&gt;&lt;/div&gt;
+
+        &lt;div class=&quot;detail-layer&quot; id=&quot;detail-layer&quot; aria-hidden=&quot;true&quot;&gt;
+          &lt;div class=&quot;detail-layout&quot;&gt;
+            &lt;figure class=&quot;detail-visual&quot; style=&quot;margin:0&quot; id=&quot;detail-visual&quot;&gt;
+              &lt;button class=&quot;back-button&quot; id=&quot;back-button&quot; type=&quot;button&quot;&gt;&lt;svg viewBox=&quot;0 0 20 20&quot; fill=&quot;none&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;m12 4-6 6 6 6M6 10h9&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.5&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;/svg&gt;返回海岸总览 &lt;span class=&quot;mono&quot; style=&quot;opacity:.5;font-size:9px&quot;&gt;ESC&lt;/span&gt;&lt;/button&gt;
+              &lt;span class=&quot;view-badge&quot; id=&quot;view-badge&quot;&gt;剖面示意 · 非等比例&lt;/span&gt;
+              &lt;div id=&quot;diagram-container&quot; style=&quot;width:100%;height:100%&quot;&gt;&lt;/div&gt;
+            &lt;/figure&gt;
+            &lt;article class=&quot;detail-info&quot; aria-live=&quot;polite&quot;&gt;
+              &lt;div class=&quot;detail-count&quot;&gt;&lt;span class=&quot;number mono&quot; id=&quot;detail-number&quot;&gt;01 / 18&lt;/span&gt;&lt;span class=&quot;category&quot; id=&quot;detail-category&quot;&gt;海蚀地貌&lt;/span&gt;&lt;/div&gt;
+              &lt;h2 id=&quot;detail-title&quot;&gt;岬角&lt;/h2&gt;
+              &lt;p class=&quot;detail-en&quot; id=&quot;detail-en&quot;&gt;Headland&lt;/p&gt;
+              &lt;section class=&quot;info-section&quot;&gt;&lt;h3&gt;&lt;span&gt;01&lt;/span&gt;地貌是什么&lt;/h3&gt;&lt;p id=&quot;detail-intro&quot;&gt;&lt;/p&gt;&lt;div class=&quot;recognition&quot; id=&quot;detail-tags&quot;&gt;&lt;/div&gt;&lt;/section&gt;
+              &lt;section class=&quot;info-section&quot;&gt;&lt;h3&gt;&lt;span&gt;02&lt;/span&gt;为什么会形成&lt;/h3&gt;&lt;p id=&quot;detail-formation&quot;&gt;&lt;/p&gt;&lt;/section&gt;
+              &lt;div class=&quot;detail-navigation&quot;&gt;
+                &lt;button class=&quot;nav-button&quot; id=&quot;prev-button&quot; type=&quot;button&quot;&gt;&lt;small&gt;← 上一种地貌&lt;/small&gt;&lt;strong id=&quot;prev-name&quot;&gt;&lt;/strong&gt;&lt;/button&gt;
+                &lt;button class=&quot;nav-button&quot; id=&quot;next-button&quot; type=&quot;button&quot;&gt;&lt;small&gt;下一种地貌 →&lt;/small&gt;&lt;strong id=&quot;next-name&quot;&gt;&lt;/strong&gt;&lt;/button&gt;
+              &lt;/div&gt;
+            &lt;/article&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;atlas-bottom&quot; id=&quot;atlas-bottom&quot;&gt;
+        &lt;div class=&quot;filter-row&quot; role=&quot;group&quot; aria-label=&quot;按成因筛选地貌&quot;&gt;
+          &lt;span class=&quot;filter-label&quot;&gt;成因筛选&lt;/span&gt;
+          &lt;button class=&quot;filter-button is-active&quot; type=&quot;button&quot; data-filter=&quot;all&quot;&gt;全部 18&lt;/button&gt;
+          &lt;button class=&quot;filter-button&quot; type=&quot;button&quot; data-filter=&quot;erosion&quot;&gt;海蚀地貌 07&lt;/button&gt;
+          &lt;button class=&quot;filter-button&quot; type=&quot;button&quot; data-filter=&quot;deposition&quot;&gt;海积与岛屿 07&lt;/button&gt;
+          &lt;button class=&quot;filter-button&quot; type=&quot;button&quot; data-filter=&quot;eco&quot;&gt;河口与生物海岸 04&lt;/button&gt;
+          &lt;span class=&quot;filter-hint&quot;&gt;方向固定：上北下南 · 左西右东&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;index-strip&quot; id=&quot;index-strip&quot; aria-label=&quot;全部地貌快速索引&quot;&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;page-notes&quot; aria-label=&quot;阅读说明&quot;&gt;
+      &lt;div class=&quot;note-block&quot;&gt;
+        &lt;svg viewBox=&quot;0 0 28 28&quot; fill=&quot;none&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;14&quot; cy=&quot;14&quot; r=&quot;11&quot; stroke=&quot;currentColor&quot; opacity=&quot;.45&quot;/&gt;&lt;path d=&quot;M14 12v7M14 8v1&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.5&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;/svg&gt;
+        &lt;div&gt;&lt;h2&gt;关于这张综合海岸图&lt;/h2&gt;&lt;p&gt;为便于对照学习，将不同纬度、不同岩性条件下的典型地貌组合在同一条理想海岸上，并不表示它们会在同一地点同时出现。图形为教学示意，尺寸与距离不按真实比例。&lt;/p&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;note-block&quot;&gt;
+        &lt;svg viewBox=&quot;0 0 28 28&quot; fill=&quot;none&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M5 20 14 5l9 15M8 16h12M14 5v18&quot; stroke=&quot;currentColor&quot; opacity=&quot;.65&quot; stroke-width=&quot;1.3&quot;/&gt;&lt;/svg&gt;
+        &lt;div&gt;&lt;h2&gt;观察时抓住三条线索&lt;/h2&gt;&lt;p&gt;先看物质是基岩还是松散沉积物，再找主导动力是波浪、潮汐、河流还是风与生物，最后判断过程以侵蚀还是堆积为主。形态相似的地貌，成因可能并不相同。&lt;/p&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+  &lt;/main&gt;
+
+  &lt;footer class=&quot;site-footer shell&quot;&gt;&lt;span&gt;岸境 · 海岸地貌立体图谱&lt;/span&gt;&lt;span class=&quot;mono&quot;&gt;GEOGRAPHY FIELD NOTES / 2026&lt;/span&gt;&lt;/footer&gt;
+
+  &lt;script&gt;
+    &quot;use strict&quot;;
+
+    /* === 地貌知识数据 === */
+    const landforms = [
+      { id: &quot;headland&quot;, name: &quot;岬角&quot;, en: &quot;Headland&quot;, category: &quot;erosion&quot;, categoryName: &quot;海蚀地貌&quot;, view: &quot;近景正视&quot;, tags: [&quot;向海突出&quot;, &quot;抗蚀基岩&quot;, &quot;波能集中&quot;], intro: &quot;岬角是伸入海洋、轮廓较为尖锐的陆地，常与海湾相间分布。坚硬岩层构成的岬角能抵抗较强的波浪侵蚀，在海岬两侧形成明显的折线海岸。&quot;, formation: &quot;海岸岩石的抗蚀能力存在差异。坚硬岩体后退较慢而保留为岬角，软弱岩层或破碎带被更快侵蚀，凹入成为海湾。波浪折射还会使能量向岬角辐聚，加强其两侧的侵蚀。&quot; },
+      { id: &quot;bay&quot;, name: &quot;海湾&quot;, en: &quot;Bay&quot;, category: &quot;erosion&quot;, categoryName: &quot;海岸基础形态&quot;, view: &quot;近景正视&quot;, tags: [&quot;向陆凹入&quot;, &quot;波能辐散&quot;, &quot;常伴沉积&quot;], intro: &quot;海湾是海岸线向陆地凹入形成的水域，通常夹在两个岬角之间。湾内水较深、轮廓开阔，或拥有狭窄湾口；其具体形态受原始海岸、岩性和构造影响。&quot;, formation: &quot;软弱岩层、断层破碎带被优先侵蚀，或沿岸低地受海水淹没，都可形成海湾。进入湾内的波浪发生折射，能量趋于分散，侵蚀较岬角弱，部分海湾因此出现沙滩等堆积地貌。&quot; },
+      { id: &quot;cliff&quot;, name: &quot;海蚀崖&quot;, en: &quot;Sea cliff&quot;, category: &quot;erosion&quot;, categoryName: &quot;海蚀地貌&quot;, view: &quot;海岸剖面&quot;, tags: [&quot;陡峭岩壁&quot;, &quot;崖脚冲蚀&quot;, &quot;重力崩塌&quot;], intro: &quot;海蚀崖是基岩海岸临海一侧的陡峭崖壁，常呈近乎直立的形态。崖面可见岩层、节理和崩塌痕迹，崖脚往往分布海蚀穴、碎石或海蚀平台。&quot;, formation: &quot;波浪反复冲击崖脚，以海水压缩空气、挟沙磨蚀等方式掏蚀基岩；风化与海水溶蚀也会削弱岩体。当上部岩石失去支撑，便在重力作用下崩塌，崖壁随之后退并维持陡峻外形。&quot; },
+      { id: &quot;platform&quot;, name: &quot;海蚀平台&quot;, en: &quot;Wave-cut platform&quot;, category: &quot;erosion&quot;, categoryName: &quot;海蚀地貌&quot;, view: &quot;海岸剖面&quot;, tags: [&quot;平缓岩台&quot;, &quot;潮间带&quot;, &quot;崖后退残留&quot;], intro: &quot;海蚀平台是海蚀崖崖脚向海延伸的平坦或微倾基岩台地，多位于潮间带。退潮时较易出露，表面可覆盖薄层砂砾，并发育沟槽与小型水洼。&quot;, formation: &quot;海蚀崖在波浪侵蚀和崩塌中持续向陆后退，原先位于崖脚以下的岩床被保留下来，逐渐形成向海缓倾的平台。波浪磨蚀与潮汐作用继续修整其表面；若地壳抬升，平台还可能成为海蚀阶地。&quot; },
+      { id: &quot;cave&quot;, name: &quot;海蚀穴&quot;, en: &quot;Sea cave&quot;, category: &quot;erosion&quot;, categoryName: &quot;海蚀地貌&quot;, view: &quot;崖脚剖面&quot;, tags: [&quot;崖脚凹腔&quot;, &quot;节理弱点&quot;, &quot;压缩空气&quot;], intro: &quot;海蚀穴是海蚀崖基部被波浪掏蚀形成的凹穴或洞腔，洞口朝向海洋。它常沿节理、层理或软弱岩层发育，规模可从浅小凹坑到深入崖体的洞道。&quot;, formation: &quot;波浪在高潮和低潮之间反复冲击崖脚，水流与其中挟带的砂砾磨蚀岩石；浪涌入裂隙时压缩空气，退出时压力骤释，使裂隙不断扩展。软弱部位被优先掏空，最终形成海蚀穴。&quot; },
+      { id: &quot;arch&quot;, name: &quot;海蚀拱桥&quot;, en: &quot;Sea arch&quot;, category: &quot;erosion&quot;, categoryName: &quot;海蚀地貌&quot;, view: &quot;近景正视&quot;, tags: [&quot;天然拱洞&quot;, &quot;洞穴贯通&quot;, &quot;岬角残体&quot;], intro: &quot;海蚀拱桥是基岩海岸中下部被蚀穿、上部仍保留岩体的天然拱形地貌，常位于突出海中的岬角或岩脊上，其拱洞可让海水通过。&quot;, formation: &quot;岬角两侧或同一裂隙两侧的海蚀穴持续扩大，最终相互贯通；也可能是一条深长洞穴的顶部局部坍塌后留下拱形岩体。拱顶仍受风化和重力影响，继续坍塌便可能演变为海蚀柱。&quot; },
+      { id: &quot;stack&quot;, name: &quot;海蚀柱&quot;, en: &quot;Sea stack&quot;, category: &quot;erosion&quot;, categoryName: &quot;海蚀地貌&quot;, view: &quot;近景正视&quot;, tags: [&quot;孤立岩柱&quot;, &quot;拱桥坍塌&quot;, &quot;侵蚀残留&quot;], intro: &quot;海蚀柱是孤立于海蚀崖前方、突出海面的柱状或塔状岩体，底部常受波浪冲刷。它与海蚀崖、海蚀平台共同记录基岩海岸的后退过程。&quot;, formation: &quot;海蚀拱桥的拱顶坍塌，或海蚀崖后退过程中较坚硬的岩体残留下来，均可形成海蚀柱。此后柱体仍受波浪侵蚀与风化，基部会逐渐缩小，最终可能倒塌并成为平台上的碎石。&quot; },
+      { id: &quot;beach&quot;, name: &quot;海滩&quot;, en: &quot;Beach&quot;, category: &quot;deposition&quot;, categoryName: &quot;海积地貌&quot;, view: &quot;沉积剖面&quot;, tags: [&quot;松散沉积物&quot;, &quot;潮间带延伸&quot;, &quot;动态坡面&quot;], intro: &quot;海滩是由砂、砾等松散沉积物组成、沿海岸分布的堆积体，可从低潮线附近延伸到风暴大浪能够影响的后滨。其坡度和宽度会随季节与风浪条件改变。&quot;, formation: &quot;河流供沙、海岸侵蚀和近岸沉积物再搬运提供物源。波浪与沿岸流将沉积物推向岸边并重新分选，当输入大于输出时发生堆积。温和浪常促成较宽海滩，强风暴浪则可能将砂带回近岸水下。&quot; },
+      { id: &quot;dune&quot;, name: &quot;滨海沙丘&quot;, en: &quot;Coastal dune&quot;, category: &quot;deposition&quot;, categoryName: &quot;风成海岸地貌&quot;, view: &quot;沉积剖面&quot;, tags: [&quot;风成堆积&quot;, &quot;植物固沙&quot;, &quot;海滩后缘&quot;], intro: &quot;滨海沙丘是海滩后缘由风力堆积形成的低矮沙岗，常呈平行海岸的带状或片状分布。迎风坡较缓，背风坡较陡，耐盐植物可帮助稳定沙面。&quot;, formation: &quot;退潮后海滩砂晒干，向岸风把松散的细砂吹向陆地。砂粒遇到植被、漂木或地形障碍后风速降低而沉积，逐渐堆高成丘。充足沙源、持续向岸风与固沙植物是沙丘发育的重要条件。&quot; },
+      { id: &quot;spit&quot;, name: &quot;沙嘴&quot;, en: &quot;Sand spit&quot;, category: &quot;deposition&quot;, categoryName: &quot;海积地貌&quot;, view: &quot;近景正视&quot;, tags: [&quot;一端连岸&quot;, &quot;沿岸漂沙&quot;, &quot;末端可弯曲&quot;], intro: &quot;沙嘴是一端与海岸相连、另一端伸入海湾或海洋的狭长砂砾堆积体。其长轴常与海岸斜交，末端可能弯成钩状，并在根部连接海滩或沙丘。&quot;, formation: &quot;沿岸流携带泥沙到达海岸方向突变或水深增大的位置时，搬运能力下降，沉积物沿原运动方向继续向前堆积，形成沙嘴。风向与浪向变化、湾口回流等因素可使自由端弯曲，形成钩状沙嘴。&quot; },
+      { id: &quot;barrier&quot;, name: &quot;沙坝&quot;, en: &quot;Sand barrier&quot;, category: &quot;deposition&quot;, categoryName: &quot;海积地貌&quot;, view: &quot;近景正视&quot;, tags: [&quot;长条砂体&quot;, &quot;破浪堆积&quot;, &quot;可出露或水下&quot;], intro: &quot;沙坝是由砂或砾石组成的条带状堆积体，可在近岸水下发育，也可高出海面并与海岸大致平行。出露且较高、较长的沙坝常称为堡岛或沿岸沙坝。&quot;, formation: &quot;波浪接近岸边时破碎，能量和挟沙能力改变，使砂砾在破浪带堆积；沿岸流也能提供并搬运物源。海面变化、风暴越浪与长期沉积供应共同促使沙坝增长，出露的沙坝可将外侧海水与内侧潟湖分隔。&quot; },
+      { id: &quot;lagoon&quot;, name: &quot;潟湖&quot;, en: &quot;Coastal lagoon&quot;, category: &quot;deposition&quot;, categoryName: &quot;海积相关地貌&quot;, view: &quot;近景正视&quot;, tags: [&quot;浅水水体&quot;, &quot;沙坝分隔&quot;, &quot;水体交换受限&quot;], intro: &quot;潟湖是被沙嘴、沙坝或堡岛与外海部分隔开的浅水体，常通过狭窄潮汐通道与海相连。其盐度可偏淡、接近海水或在干旱区偏高，沉积环境通常较安静。&quot;, formation: &quot;沿岸泥沙堆积形成沙嘴或沙坝，逐渐围合原来的海湾、河口或浅海区域，使内外水体交换受到限制。河流输入、潮汐通道的冲淤以及风暴越浪会持续改变潟湖的水深、盐度和面积。&quot; },
+      { id: &quot;tombolo&quot;, name: &quot;连岛沙洲&quot;, en: &quot;Tombolo&quot;, category: &quot;deposition&quot;, categoryName: &quot;海积地貌&quot;, view: &quot;近景正视&quot;, tags: [&quot;连接陆岛&quot;, &quot;波影区&quot;, &quot;沉积汇聚&quot;], intro: &quot;连岛沙洲是连接陆地与岛屿，或连接两个岛屿的砂砾质堆积地貌，形态可为沙堤、沙嘴或较宽的沙洲。出露部分在低潮或常年均可通行。&quot;, formation: &quot;岛屿使背陆一侧成为波浪折射与绕射形成的波影区，波能降低，沿岸流搬运的泥沙容易在此沉积。岛后两侧的沉积物相向增长，最终把岛与岸连接起来；潮汐通道和供沙变化可使其继续增宽或被切断。&quot; },
+      { id: &quot;island&quot;, name: &quot;离岸岛&quot;, en: &quot;Offshore island&quot;, category: &quot;deposition&quot;, categoryName: &quot;海岸基础形态&quot;, view: &quot;近景正视&quot;, tags: [&quot;与陆地相隔&quot;, &quot;成因多样&quot;, &quot;改变近岸波场&quot;], intro: &quot;离岸岛是位于大陆海岸之外、四周被海水包围且通常高出水面的陆地。图中表现的是基岩离岸岛；现实中的离岸岛也可能是火山岛、珊瑚岛或砂质堡岛。&quot;, formation: &quot;离岸岛没有唯一成因：构造抬升、海面上升淹没沿海低地、火山活动或珊瑚生物建造均可成岛，基岩海岸侵蚀也能使岩体与陆地分离。砂质堡岛则主要由波浪和沿岸流堆积形成，分析时须结合物质组成。&quot; },
+      { id: &quot;tidal&quot;, name: &quot;潮滩&quot;, en: &quot;Tidal flat&quot;, category: &quot;eco&quot;, categoryName: &quot;潮汐沉积地貌&quot;, view: &quot;潮滩剖面&quot;, tags: [&quot;周期淹没&quot;, &quot;平缓宽广&quot;, &quot;泥砂沉积&quot;], intro: &quot;潮滩是位于平均高潮线与平均低潮线之间、随潮汐周期性出露和淹没的平缓滩地，可分为泥滩、砂滩或混合滩，表面常见潮沟、波纹和生物活动痕迹。&quot;, formation: &quot;在波浪较弱、泥沙供应充足的隐蔽海岸，涨潮把细颗粒泥沙带入滩面，流速降低后沉积；落潮与潮沟水流再进行冲刷和分选。长期反复淤积使滩面逐渐抬高并向海推进，盐沼或红树林也可参与促淤。&quot; },
+      { id: &quot;delta&quot;, name: &quot;河口三角洲&quot;, en: &quot;River delta&quot;, category: &quot;eco&quot;, categoryName: &quot;河口堆积地貌&quot;, view: &quot;近景正视&quot;, tags: [&quot;河流供沙&quot;, &quot;汊道分汊&quot;, &quot;向海推进&quot;], intro: &quot;河口三角洲是河流入海或入湖处，由沉积物堆积形成的低平三角形、鸟足形或弧形陆地。其上常发育分汊河道、天然堤、湿地和潮滩，轮廓会随水沙条件改变。&quot;, formation: &quot;河流进入开阔水体后流速骤减，搬运能力下降，泥沙在河口沉积；絮凝作用也促使细颗粒沉降。沉积体使河道分汊并不断向海延伸。河流供沙、波浪改造和潮汐再分配共同决定三角洲形态。&quot; },
+      { id: &quot;reef&quot;, name: &quot;珊瑚礁&quot;, en: &quot;Coral reef&quot;, category: &quot;eco&quot;, categoryName: &quot;生物建造地貌&quot;, view: &quot;浅海剖面&quot;, tags: [&quot;碳酸钙礁体&quot;, &quot;温暖清澈浅海&quot;, &quot;生物建造&quot;], intro: &quot;珊瑚礁是由造礁珊瑚及其他生物的碳酸钙骨骼长期堆积、胶结形成的海洋生物地貌，可分为岸礁、堡礁和环礁等类型。礁体能削弱波浪并影响近岸沉积。&quot;, formation: &quot;在温暖、清澈、光照充足且盐度适宜的浅海中，珊瑚虫分泌碳酸钙骨骼，藻类等生物也参与粘结与堆积。一代代生物遗骸在旧礁体上生长并胶结，经过漫长时间形成礁体；海平面与地壳变化会影响其垂向生长。&quot; },
+      { id: &quot;mangrove&quot;, name: &quot;红树林海岸&quot;, en: &quot;Mangrove coast&quot;, category: &quot;eco&quot;, categoryName: &quot;生物海岸&quot;, view: &quot;潮间带剖面&quot;, tags: [&quot;潮间带林带&quot;, &quot;根系促淤&quot;, &quot;热带亚热带&quot;], intro: &quot;红树林海岸是热带、亚热带淤泥质潮间带中，由红树植物群落与潮滩共同构成的生物海岸。密集的支柱根和呼吸根出露滩面，潮沟在林间蜿蜒分布。&quot;, formation: &quot;温暖、风浪较弱且细颗粒泥沙供应充足的潮间带，为红树植物提供生境。植物根系降低流速、拦截并固定泥沙，促进滩面淤高；沉积与植物扩展相互作用形成宽缓海岸。它属于生物—沉积共同塑造，而非单纯植物堆积。&quot; }
+    ];
+
+    /* === 通用 SVG 绘图工具 === */
+    const label = (x, y, text, tx, ty, anchor = &quot;start&quot;) =&gt; `
+      &lt;g class=&quot;diagram-label&quot;&gt;&lt;path d=&quot;M${x} ${y + 7} L${tx} ${ty}&quot; fill=&quot;none&quot; stroke=&quot;#385e59&quot; stroke-width=&quot;1.2&quot; stroke-dasharray=&quot;3 4&quot;/&gt;
+      &lt;circle cx=&quot;${tx}&quot; cy=&quot;${ty}&quot; r=&quot;3.5&quot; fill=&quot;#c65f42&quot;/&gt;&lt;text x=&quot;${x}&quot; y=&quot;${y}&quot; text-anchor=&quot;${anchor}&quot; fill=&quot;#173f3d&quot; font-size=&quot;14&quot; font-weight=&quot;600&quot;&gt;${text}&lt;/text&gt;&lt;/g&gt;`;
+    const waves = (y = 390) =&gt; `&lt;g class=&quot;diagram-wave&quot; fill=&quot;none&quot; stroke=&quot;#f4f0d9&quot; stroke-width=&quot;2&quot; opacity=&quot;.7&quot;&gt;&lt;path d=&quot;M35 ${y}q18-12 36 0t36 0M160 ${y + 26}q18-12 36 0t36 0M280 ${y - 12}q18-12 36 0t36 0M430 ${y + 20}q18-12 36 0t36 0M560 ${y - 4}q18-12 36 0t36 0&quot;/&gt;&lt;/g&gt;`;
+    function diagramShell(content, caption) {
+      return `&lt;svg class=&quot;detail-svg&quot; viewBox=&quot;0 0 760 620&quot; preserveAspectRatio=&quot;xMidYMid meet&quot; role=&quot;img&quot; aria-label=&quot;${caption}&quot;&gt;
+        &lt;defs&gt;
+          &lt;linearGradient id=&quot;dSky&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;0&quot; y2=&quot;1&quot;&gt;&lt;stop stop-color=&quot;#e8e9dc&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#c8dcd3&quot;/&gt;&lt;/linearGradient&gt;
+          &lt;linearGradient id=&quot;dSea&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;0&quot; y2=&quot;1&quot;&gt;&lt;stop stop-color=&quot;#70a5a0&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#326e73&quot;/&gt;&lt;/linearGradient&gt;
+          &lt;linearGradient id=&quot;dRock&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;1&quot; y2=&quot;1&quot;&gt;&lt;stop stop-color=&quot;#b9aa84&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#756f5b&quot;/&gt;&lt;/linearGradient&gt;
+          &lt;linearGradient id=&quot;dSand&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;0&quot; y2=&quot;1&quot;&gt;&lt;stop stop-color=&quot;#ead6a1&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#b79963&quot;/&gt;&lt;/linearGradient&gt;
+          &lt;pattern id=&quot;dGrid&quot; width=&quot;42&quot; height=&quot;42&quot; patternUnits=&quot;userSpaceOnUse&quot;&gt;&lt;path d=&quot;M42 0H0v42&quot; fill=&quot;none&quot; stroke=&quot;#173f3d&quot; stroke-opacity=&quot;.045&quot;/&gt;&lt;/pattern&gt;
+          &lt;filter id=&quot;dShadow&quot; x=&quot;-30%&quot; y=&quot;-50%&quot; width=&quot;170%&quot; height=&quot;220%&quot;&gt;&lt;feDropShadow dx=&quot;8&quot; dy=&quot;12&quot; stdDeviation=&quot;8&quot; flood-color=&quot;#173f3d&quot; flood-opacity=&quot;.2&quot;/&gt;&lt;/filter&gt;
+        &lt;/defs&gt;
+        &lt;rect width=&quot;760&quot; height=&quot;620&quot; fill=&quot;url(#dSky)&quot;/&gt;&lt;rect width=&quot;760&quot; height=&quot;620&quot; fill=&quot;url(#dGrid)&quot;/&gt;
+        &lt;path d=&quot;M0 118H760&quot; stroke=&quot;#173f3d&quot; stroke-opacity=&quot;.08&quot;/&gt;
+        &lt;text x=&quot;24&quot; y=&quot;595&quot; fill=&quot;#173f3d&quot; opacity=&quot;.55&quot; font-size=&quot;10&quot; letter-spacing=&quot;2&quot;&gt;形态与成因综合示意 · 非等比例&lt;/text&gt;
+        ${content}
+      &lt;/svg&gt;`;
+    }
+
+    /* === 18 幅近景与剖面图 === */
+    function renderDiagram(id) {
+      const diagrams = {
+        headland: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 355H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M170 620 205 420 275 360 344 374 390 315 478 340 520 398 615 424 664 620Z&quot; fill=&quot;#4d665c&quot; opacity=&quot;.3&quot;/&gt;
+          &lt;path d=&quot;M200 520 225 345 302 302 350 325 405 250 505 285 555 385 640 410 670 520Z&quot; fill=&quot;url(#dRock)&quot; filter=&quot;url(#dShadow)&quot;/&gt;
+          &lt;path d=&quot;M225 345 302 302 350 325 405 250 505 285 470 328 389 306 344 366 277 350Z&quot; fill=&quot;#aab08a&quot;/&gt;
+          &lt;path d=&quot;M200 520q180-60 470 0v100H0V520Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          ${waves(485)}${label(85,220,&quot;坚硬岩体&quot;,405,276)}${label(590,210,&quot;波能辐聚&quot;,510,404,&quot;end&quot;)}
+          &lt;path d=&quot;M486 452q48-40 95 0M515 428q33-25 65 0&quot; fill=&quot;none&quot; stroke=&quot;#f5edd5&quot; stroke-width=&quot;3&quot;/&gt;
+          &lt;text x=&quot;380&quot; y=&quot;555&quot; text-anchor=&quot;middle&quot; fill=&quot;#f8f2df&quot; font-size=&quot;17&quot; letter-spacing=&quot;5&quot;&gt;向海突出的岬角&lt;/text&gt;`, &quot;岬角近景：坚硬基岩向海突出，波浪在岬角附近集中&quot;),
+        bay: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 350H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M0 340 120 278 220 298 266 355 305 411 395 449 477 420 532 345 600 292 760 255V620H0Z&quot; fill=&quot;url(#dRock)&quot;/&gt;
+          &lt;path d=&quot;M0 326 125 261 221 280 266 340 302 385 395 422 477 392 532 328 600 273 760 237V300L600 320 540 371 486 443 397 480 293 438 245 379 202 326 117 309 0 370Z&quot; fill=&quot;#aab08a&quot;/&gt;
+          &lt;path d=&quot;M0 440Q200 400 305 461T760 433V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M289 461q108 58 208 0&quot; fill=&quot;none&quot; stroke=&quot;#e8d5a1&quot; stroke-width=&quot;20&quot;/&gt;
+          ${waves(510)}${label(90,205,&quot;岬角&quot;,180,291)}${label(655,190,&quot;岬角&quot;,580,293,&quot;end&quot;)}${label(380,230,&quot;波能辐散，湾内较弱&quot;,390,454,&quot;middle&quot;)}
+          &lt;text x=&quot;380&quot; y=&quot;555&quot; text-anchor=&quot;middle&quot; fill=&quot;#f8f2df&quot; font-size=&quot;17&quot; letter-spacing=&quot;5&quot;&gt;向陆凹入的海湾&lt;/text&gt;`, &quot;海湾近景：两侧岬角之间向陆地凹入的水域&quot;),
+        cliff: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 390H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M395 385 420 166 760 145V620H410Z&quot; fill=&quot;url(#dRock)&quot; filter=&quot;url(#dShadow)&quot;/&gt;
+          &lt;path d=&quot;M420 166 492 135 760 122V167L512 179 450 198Z&quot; fill=&quot;#aab08a&quot;/&gt;
+          &lt;path d=&quot;M425 225 730 206M418 284 760 260M408 348 730 320&quot; stroke=&quot;#575e51&quot; stroke-width=&quot;5&quot; opacity=&quot;.55&quot;/&gt;
+          &lt;path d=&quot;M485 186 450 350M590 180l-35 184M685 165l-26 165&quot; stroke=&quot;#4f584e&quot; stroke-width=&quot;3&quot;/&gt;
+          &lt;path d=&quot;M390 420 470 394 565 406 638 386 760 401V448H370Z&quot; fill=&quot;#8a8c72&quot;/&gt;
+          ${waves(430)}${label(580,95,&quot;崖顶基岩&quot;,560,157)}${label(120,255,&quot;海蚀崖&quot;,418,278)}${label(135,520,&quot;波浪掏蚀崖脚&quot;,407,386)}
+          &lt;path d=&quot;m310 380 55-5&quot; stroke=&quot;#f4e8cd&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;m300 390 70-6&quot; stroke=&quot;#f4e8cd&quot; stroke-width=&quot;2&quot;/&gt;`, &quot;海蚀崖剖面：陡直岩壁与受波浪掏蚀的崖脚&quot;),
+        platform: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 400H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M485 390 505 158 760 142V620H465Z&quot; fill=&quot;url(#dRock)&quot;/&gt;
+          &lt;path d=&quot;M505 158 565 128 760 120V160L548 175Z&quot; fill=&quot;#aab08a&quot;/&gt;
+          &lt;path d=&quot;M490 390 430 408 350 411 260 437 120 451 0 445V486L260 478 430 448 520 419Z&quot; fill=&quot;#9a987b&quot;/&gt;
+          &lt;path d=&quot;M120 451 260 437 350 411 430 408 490 390 480 421 360 442 220 468Z&quot; fill=&quot;#b5ae8c&quot;/&gt;
+          &lt;path d=&quot;M505 225 760 205M498 290 760 267M490 345 760 330&quot; stroke=&quot;#565e52&quot; stroke-width=&quot;4&quot; opacity=&quot;.5&quot;/&gt;
+          ${waves(453)}${label(200,280,&quot;海蚀平台&quot;,325,423)}${label(610,85,&quot;海蚀崖后退&quot;,525,190)}${label(120,525,&quot;向海缓倾的岩台&quot;,260,460)}
+          &lt;path d=&quot;M535 115h-90m15-8-15 8 15 8&quot; stroke=&quot;#c65f42&quot; stroke-width=&quot;2&quot; fill=&quot;none&quot;/&gt;`, &quot;海蚀平台剖面：海蚀崖后退后残留的向海缓倾岩台&quot;),
+        cave: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 415H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M330 420 360 155 760 130V620H330Z&quot; fill=&quot;url(#dRock)&quot; filter=&quot;url(#dShadow)&quot;/&gt;
+          &lt;path d=&quot;M360 155 450 125 760 110V150L450 165Z&quot; fill=&quot;#aab08a&quot;/&gt;
+          &lt;path d=&quot;M334 417Q346 322 421 325T521 413L493 441 348 451Z&quot; fill=&quot;#243f3e&quot;/&gt;
+          &lt;path d=&quot;M350 415Q369 354 423 356T485 417&quot; fill=&quot;none&quot; stroke=&quot;#d1c298&quot; stroke-width=&quot;9&quot;/&gt;
+          &lt;path d=&quot;M480 185 445 327M560 170l-42 178M650 160l-28 150M355 250l405-24M344 304l416-20&quot; stroke=&quot;#525b50&quot; stroke-width=&quot;3&quot; opacity=&quot;.65&quot;/&gt;
+          ${waves(437)}${label(135,270,&quot;海蚀穴&quot;,370,370)}${label(565,90,&quot;节理与软弱带&quot;,478,238)}${label(125,525,&quot;波浪与挟沙磨蚀&quot;,338,425)}
+          &lt;path d=&quot;M270 390h62m-12-9 12 9-12 9&quot; fill=&quot;none&quot; stroke=&quot;#f5e9cb&quot; stroke-width=&quot;3&quot;/&gt;`, &quot;海蚀穴剖面：波浪沿崖脚软弱带掏蚀形成洞腔&quot;),
+        arch: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 415H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M178 430 208 284 290 218 420 208 530 271 575 431 492 438Q477 306 385 307T273 438Z&quot; fill=&quot;url(#dRock)&quot; filter=&quot;url(#dShadow)&quot; fill-rule=&quot;evenodd&quot;/&gt;
+          &lt;path d=&quot;M208 284 290 218 420 208 530 271 488 289 409 251 307 263 250 309Z&quot; fill=&quot;#aab08a&quot;/&gt;
+          &lt;path d=&quot;M244 286 316 275M451 261l61 41M220 344l52 9M493 348l58-5&quot; stroke=&quot;#5d6252&quot; stroke-width=&quot;4&quot;/&gt;
+          &lt;path d=&quot;M273 438Q282 306 385 307T492 438&quot; fill=&quot;none&quot; stroke=&quot;#c6b68e&quot; stroke-width=&quot;8&quot;/&gt;
+          ${waves(450)}${label(375,130,&quot;保留的拱顶岩体&quot;,385,230,&quot;middle&quot;)}${label(85,310,&quot;贯通拱洞&quot;,295,382)}${label(625,510,&quot;海蚀崖残体&quot;,525,400,&quot;end&quot;)}
+          &lt;path d=&quot;M337 460h105&quot; stroke=&quot;#f1e6c9&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;5 5&quot;/&gt;`, &quot;海蚀拱桥正视：岬角被蚀穿后形成的天然拱洞&quot;),
+        stack: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 415H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M555 423 580 215 760 190V620H540Z&quot; fill=&quot;url(#dRock)&quot; opacity=&quot;.72&quot;/&gt;
+          &lt;path d=&quot;M580 215 645 177 760 170V213L642 230Z&quot; fill=&quot;#aab08a&quot;/&gt;
+          &lt;path d=&quot;M254 442 280 262 333 220 386 249 411 440Z&quot; fill=&quot;url(#dRock)&quot; filter=&quot;url(#dShadow)&quot;/&gt;
+          &lt;path d=&quot;M280 262 333 220 386 249 354 275 310 273Z&quot; fill=&quot;#b1b18b&quot;/&gt;
+          &lt;path d=&quot;M295 309 380 301M283 358l111-8M275 401l125-5&quot; stroke=&quot;#555e51&quot; stroke-width=&quot;4&quot; opacity=&quot;.6&quot;/&gt;
+          &lt;ellipse cx=&quot;332&quot; cy=&quot;450&quot; rx=&quot;122&quot; ry=&quot;24&quot; fill=&quot;#244f53&quot; opacity=&quot;.32&quot;/&gt;
+          ${waves(451)}${label(170,185,&quot;孤立海蚀柱&quot;,310,254)}${label(90,520,&quot;柱脚受浪蚀&quot;,274,421)}${label(675,120,&quot;原海蚀崖&quot;,604,224,&quot;end&quot;)}
+          &lt;path d=&quot;M417 247h95&quot; stroke=&quot;#c65f42&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;5 5&quot;/&gt;`, &quot;海蚀柱近景：海蚀崖前方孤立的柱状基岩&quot;),
+        beach: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 385H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M0 460Q190 447 355 392T760 210V620H0Z&quot; fill=&quot;url(#dSand)&quot;/&gt;
+          &lt;path d=&quot;M0 456Q190 443 355 388T760 206&quot; fill=&quot;none&quot; stroke=&quot;#f5e6bd&quot; stroke-width=&quot;12&quot;/&gt;
+          &lt;path d=&quot;M760 210V115H650L610 239Z&quot; fill=&quot;#9fa883&quot;/&gt;
+          &lt;path d=&quot;M80 487Q225 475 370 422&quot; fill=&quot;none&quot; stroke=&quot;#f7edda&quot; stroke-width=&quot;3&quot;/&gt;
+          ${waves(430)}${label(175,280,&quot;前滨&quot;,315,409)}${label(585,130,&quot;后滨&quot;,603,263)}${label(85,545,&quot;砂、砾等松散沉积物&quot;,225,469)}
+          &lt;path d=&quot;M205 369v-48m-7 12 7-12 7 12&quot; stroke=&quot;#c65f42&quot; stroke-width=&quot;2&quot; fill=&quot;none&quot;/&gt;&lt;text x=&quot;205&quot; y=&quot;302&quot; text-anchor=&quot;middle&quot; fill=&quot;#173f3d&quot; font-size=&quot;12&quot;&gt;波浪推积&lt;/text&gt;`, &quot;海滩剖面：由砂砾组成的后滨与前滨斜坡&quot;),
+        dune: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 420H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M0 462Q220 450 390 390T760 375V620H0Z&quot; fill=&quot;url(#dSand)&quot;/&gt;
+          &lt;path d=&quot;M334 415Q430 196 545 392 650 228 760 378V620H334Z&quot; fill=&quot;url(#dSand)&quot; filter=&quot;url(#dShadow)&quot;/&gt;
+          &lt;path d=&quot;M334 415Q430 196 545 392M545 392Q650 228 760 378&quot; fill=&quot;none&quot; stroke=&quot;#f0ddb0&quot; stroke-width=&quot;7&quot;/&gt;
+          &lt;g stroke=&quot;#5f7656&quot; stroke-width=&quot;4&quot; stroke-linecap=&quot;round&quot;&gt;&lt;path d=&quot;M465 330v-35m0 25-13-15m13 20 17-19M641 327v-35m0 20-12-14m12 20 15-18&quot;/&gt;&lt;/g&gt;
+          ${waves(430)}${label(180,275,&quot;干燥砂源&quot;,280,421)}${label(470,160,&quot;植被固沙&quot;,465,318)}${label(675,180,&quot;沙丘&quot;,620,305)}
+          &lt;path d=&quot;M210 350h115m-13-9 13 9-13 9&quot; stroke=&quot;#c65f42&quot; stroke-width=&quot;2.5&quot; fill=&quot;none&quot;/&gt;&lt;text x=&quot;265&quot; y=&quot;330&quot; text-anchor=&quot;middle&quot; fill=&quot;#173f3d&quot; font-size=&quot;12&quot;&gt;向岸风&lt;/text&gt;`, &quot;滨海沙丘剖面：向岸风将海滩砂搬运到植被处堆积&quot;),
+        spit: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 150H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M510 130H760V620H650Q604 535 570 470T490 348L430 260Z&quot; fill=&quot;#9ea783&quot;/&gt;
+          &lt;path d=&quot;M510 210C430 267 401 335 330 365S176 387 164 454 236 529 295 478&quot; fill=&quot;none&quot; stroke=&quot;#a48855&quot; stroke-width=&quot;54&quot; stroke-linecap=&quot;round&quot; filter=&quot;url(#dShadow)&quot;/&gt;
+          &lt;path d=&quot;M510 196C430 253 401 321 330 351S176 373 164 440 236 515 295 464&quot; fill=&quot;none&quot; stroke=&quot;url(#dSand)&quot; stroke-width=&quot;43&quot; stroke-linecap=&quot;round&quot;/&gt;
+          &lt;path d=&quot;M495 196C425 250 393 313 326 337S180 361 164 426&quot; fill=&quot;none&quot; stroke=&quot;#f1deb0&quot; stroke-width=&quot;6&quot;/&gt;
+          ${waves(515)}${label(120,230,&quot;沿岸漂沙方向&quot;,305,342)}${label(550,510,&quot;沙嘴根部&quot;,498,230)}${label(335,555,&quot;钩状自由端&quot;,280,464)}
+          &lt;path d=&quot;M420 298C360 342 300 353 240 366&quot; fill=&quot;none&quot; stroke=&quot;#c65f42&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;m253 355-13 11 16 5&quot; fill=&quot;none&quot; stroke=&quot;#c65f42&quot; stroke-width=&quot;3&quot;/&gt;`, &quot;沙嘴近景：一端连接海岸，另一端伸入水域并弯曲&quot;),
+        barrier: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 150H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M590 150H760V620H650Q620 480 570 350T510 150Z&quot; fill=&quot;#9ca782&quot;/&gt;
+          &lt;path d=&quot;M525 150Q472 267 482 378T552 620&quot; fill=&quot;none&quot; stroke=&quot;#ead6a1&quot; stroke-width=&quot;36&quot;/&gt;
+          &lt;path d=&quot;M250 145Q199 256 218 368T300 620&quot; fill=&quot;none&quot; stroke=&quot;#a48756&quot; stroke-width=&quot;57&quot; filter=&quot;url(#dShadow)&quot;/&gt;
+          &lt;path d=&quot;M242 140Q191 251 210 363T292 620&quot; fill=&quot;none&quot; stroke=&quot;url(#dSand)&quot; stroke-width=&quot;45&quot;/&gt;
+          &lt;path d=&quot;M210 180Q190 290 223 380&quot; fill=&quot;none&quot; stroke=&quot;#f2dfae&quot; stroke-width=&quot;5&quot;/&gt;
+          &lt;path d=&quot;M360 205Q400 342 390 500&quot; fill=&quot;none&quot; stroke=&quot;#b8d0b8&quot; stroke-width=&quot;3&quot; stroke-dasharray=&quot;7 8&quot;/&gt;
+          ${waves(450)}${label(105,210,&quot;外海破浪&quot;,165,338)}${label(390,250,&quot;沙坝&quot;,228,330)}${label(390,470,&quot;内侧安静水域&quot;,407,392)}`, &quot;沙坝近景：与外海相邻的长条状砂质堆积体&quot;),
+        lagoon: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 150H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M580 150H760V620H630Q610 460 535 350T480 150Z&quot; fill=&quot;#9ca782&quot;/&gt;
+          &lt;path d=&quot;M170 145Q122 268 143 385T225 620&quot; fill=&quot;none&quot; stroke=&quot;url(#dSand)&quot; stroke-width=&quot;48&quot; filter=&quot;url(#dShadow)&quot;/&gt;
+          &lt;path d=&quot;M522 150Q470 270 486 390T555 620&quot; fill=&quot;none&quot; stroke=&quot;#e5cf98&quot; stroke-width=&quot;35&quot;/&gt;
+          &lt;path d=&quot;M255 180Q355 145 455 190L470 385Q360 460 260 385Z&quot; fill=&quot;#8eb8aa&quot; opacity=&quot;.85&quot;/&gt;
+          &lt;path d=&quot;M275 250q80-30 165 0M280 305q80-30 160 0M300 355q65-25 130 0&quot; fill=&quot;none&quot; stroke=&quot;#d9e4cd&quot; stroke-width=&quot;2&quot; opacity=&quot;.7&quot;/&gt;
+          ${waves(490)}${label(95,215,&quot;沙坝&quot;,163,288)}${label(360,205,&quot;潟湖&quot;,360,280,&quot;middle&quot;)}${label(650,490,&quot;陆地&quot;,594,380)}${label(365,515,&quot;狭窄的潮汐通道&quot;,230,438,&quot;middle&quot;)}`, &quot;潟湖近景：沙坝与陆地之间水体交换受限的浅水区域&quot;),
+        tombolo: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 150H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M560 150H760V620H645Q610 480 565 360T490 150Z&quot; fill=&quot;#9da682&quot;/&gt;
+          &lt;path d=&quot;M122 270 180 210 267 219 312 283 277 345 185 350 115 319Z&quot; fill=&quot;url(#dRock)&quot; filter=&quot;url(#dShadow)&quot;/&gt;
+          &lt;path d=&quot;M122 254 180 194 267 203 312 267 277 321 185 326 115 303Z&quot; fill=&quot;#a5ac86&quot;/&gt;
+          &lt;path d=&quot;M282 304Q410 314 577 382&quot; fill=&quot;none&quot; stroke=&quot;#a58a59&quot; stroke-width=&quot;56&quot; filter=&quot;url(#dShadow)&quot;/&gt;
+          &lt;path d=&quot;M282 291Q410 301 577 369&quot; fill=&quot;none&quot; stroke=&quot;url(#dSand)&quot; stroke-width=&quot;43&quot;/&gt;
+          &lt;path d=&quot;M300 285Q410 296 555 351&quot; fill=&quot;none&quot; stroke=&quot;#f2dfae&quot; stroke-width=&quot;5&quot;/&gt;
+          ${waves(490)}${label(120,175,&quot;离岸岛&quot;,196,227)}${label(415,235,&quot;连岛沙洲&quot;,418,316)}${label(400,495,&quot;岛后波影区，泥沙汇聚&quot;,373,360,&quot;middle&quot;)}
+          &lt;path d=&quot;M70 408q60-35 115 0M60 442q70-35 135 0&quot; fill=&quot;none&quot; stroke=&quot;#f1e6c9&quot; stroke-width=&quot;2&quot; opacity=&quot;.65&quot;/&gt;`, &quot;连岛沙洲近景：砂质堆积体把离岸岛与大陆海岸连接&quot;),
+        island: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 390H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M590 355 650 285 760 270V620H575Z&quot; fill=&quot;#89977a&quot; opacity=&quot;.55&quot;/&gt;
+          &lt;path d=&quot;M150 440 195 323 260 278 298 184 390 165 447 250 510 286 550 441Z&quot; fill=&quot;url(#dRock)&quot; filter=&quot;url(#dShadow)&quot;/&gt;
+          &lt;path d=&quot;M195 323 260 278 298 184 390 165 447 250 510 286 467 316 404 266 340 238 286 316 230 349Z&quot; fill=&quot;#a8ae88&quot;/&gt;
+          &lt;path d=&quot;M270 290 300 371M386 230l-18 143M449 293l-22 103&quot; stroke=&quot;#566052&quot; stroke-width=&quot;4&quot;/&gt;
+          &lt;path d=&quot;M125 450q220-42 452 0&quot; fill=&quot;none&quot; stroke=&quot;#eee2bf&quot; stroke-width=&quot;5&quot;/&gt;
+          ${waves(470)}${label(160,185,&quot;基岩离岸岛&quot;,300,210)}${label(660,170,&quot;远方大陆海岸&quot;,658,294,&quot;end&quot;)}${label(360,550,&quot;四周被海水包围&quot;,350,450,&quot;middle&quot;)}
+          &lt;path d=&quot;M540 310h62&quot; stroke=&quot;#c65f42&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;5 5&quot;/&gt;`, &quot;离岸岛近景：与大陆海岸分离并被海水包围的岛屿&quot;),
+        tidal: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 385H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M0 475Q200 455 400 395T760 270V620H0Z&quot; fill=&quot;#b8ac86&quot;/&gt;
+          &lt;path d=&quot;M0 470Q200 450 400 390T760 265&quot; fill=&quot;none&quot; stroke=&quot;#d7cba7&quot; stroke-width=&quot;8&quot;/&gt;
+          &lt;path d=&quot;M710 294C610 350 645 392 520 420S370 480 260 465 150 500 80 520&quot; fill=&quot;none&quot; stroke=&quot;#6f9b90&quot; stroke-width=&quot;18&quot;/&gt;
+          &lt;path d=&quot;M710 289C610 345 645 387 520 415S370 475 260 460 150 495 80 515&quot; fill=&quot;none&quot; stroke=&quot;#99b8a5&quot; stroke-width=&quot;8&quot;/&gt;
+          &lt;g stroke=&quot;#7a7157&quot; stroke-width=&quot;2&quot; opacity=&quot;.65&quot;&gt;&lt;path d=&quot;M280 430q20-12 40 0M350 413q20-12 40 0M440 378q20-12 40 0M160 466q20-12 40 0&quot;/&gt;&lt;/g&gt;
+          ${waves(445)}${label(120,300,&quot;低潮出露滩面&quot;,240,455)}${label(585,175,&quot;高潮线&quot;,653,321)}${label(525,530,&quot;潮沟&quot;,510,417)}
+          &lt;path d=&quot;M85 378v72m-8-13 8 13 8-13&quot; stroke=&quot;#c65f42&quot; stroke-width=&quot;2&quot; fill=&quot;none&quot;/&gt;&lt;text x=&quot;85&quot; y=&quot;360&quot; text-anchor=&quot;middle&quot; fill=&quot;#173f3d&quot; font-size=&quot;12&quot;&gt;周期潮汐&lt;/text&gt;`, &quot;潮滩剖面：随潮汐周期出露与淹没的宽缓泥砂滩及潮沟&quot;),
+        delta: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 150H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M460 150H760V620H590Q560 510 505 405T400 250L350 150Z&quot; fill=&quot;#9ba781&quot;/&gt;
+          &lt;path d=&quot;M680 170C600 235 525 235 440 290S350 350 300 392&quot; fill=&quot;none&quot; stroke=&quot;#56877d&quot; stroke-width=&quot;48&quot;/&gt;
+          &lt;path d=&quot;M300 365 173 326 245 397 122 420 242 446 175 524 305 477 373 552 391 453 500 458 414 399 476 331Z&quot; fill=&quot;url(#dSand)&quot; filter=&quot;url(#dShadow)&quot;/&gt;
+          &lt;path d=&quot;M330 381 240 354M316 410l-132 14M326 437l-103 54M363 430l4 72M379 399l78 36&quot; stroke=&quot;#659488&quot; stroke-width=&quot;13&quot; stroke-linecap=&quot;round&quot;/&gt;
+          &lt;path d=&quot;M334 376 245 348M316 404l-126 15M326 431l-97 51M363 424l4 70M379 393l74 34&quot; stroke=&quot;#98b8a5&quot; stroke-width=&quot;5&quot; stroke-linecap=&quot;round&quot;/&gt;
+          ${waves(540)}${label(590,175,&quot;河流来沙&quot;,570,238)}${label(95,270,&quot;分汊河道&quot;,247,399)}${label(355,565,&quot;三角洲沉积叶瓣&quot;,325,455,&quot;middle&quot;)}`, &quot;河口三角洲近景：河流在入海口分汊并形成向海推进的沉积体&quot;),
+        reef: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 150H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M0 150H760V330Q550 290 0 350Z&quot; fill=&quot;#b8d6c7&quot; opacity=&quot;.35&quot;/&gt;
+          &lt;path d=&quot;M0 520Q200 475 375 505T760 465V620H0Z&quot; fill=&quot;#b5a77e&quot;/&gt;
+          &lt;path d=&quot;M140 510Q165 395 246 405T340 496 440 382 555 479 655 424 720 466V535H140Z&quot; fill=&quot;#9b9676&quot;/&gt;
+          &lt;g fill=&quot;none&quot; stroke=&quot;#d08970&quot; stroke-width=&quot;9&quot; stroke-linecap=&quot;round&quot;&gt;&lt;path d=&quot;M220 442v-80m0 42-32-30m32 14 30-38M410 440v-96m0 48-36-30m36 8 32-35M560 448v-70m0 35-26-24m26 8 28-28&quot;/&gt;&lt;/g&gt;
+          &lt;g fill=&quot;#d8b483&quot;&gt;&lt;circle cx=&quot;280&quot; cy=&quot;474&quot; r=&quot;28&quot;/&gt;&lt;circle cx=&quot;485&quot; cy=&quot;474&quot; r=&quot;32&quot;/&gt;&lt;circle cx=&quot;640&quot; cy=&quot;475&quot; r=&quot;23&quot;/&gt;&lt;/g&gt;
+          &lt;g fill=&quot;#f0e3bc&quot; opacity=&quot;.6&quot;&gt;&lt;circle cx=&quot;135&quot; cy=&quot;275&quot; r=&quot;5&quot;/&gt;&lt;circle cx=&quot;150&quot; cy=&quot;245&quot; r=&quot;3&quot;/&gt;&lt;circle cx=&quot;580&quot; cy=&quot;260&quot; r=&quot;5&quot;/&gt;&lt;circle cx=&quot;595&quot; cy=&quot;230&quot; r=&quot;3&quot;/&gt;&lt;/g&gt;
+          ${waves(315)}${label(90,220,&quot;温暖清澈的浅海&quot;,185,347)}${label(330,230,&quot;造礁珊瑚&quot;,410,376)}${label(580,555,&quot;生物骨骼堆积与胶结&quot;,505,487)}
+          &lt;path d=&quot;M95 170v105&quot; stroke=&quot;#f0e3bc&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;5 6&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;190&quot; fill=&quot;#f8f0da&quot; font-size=&quot;12&quot;&gt;光照&lt;/text&gt;`, &quot;珊瑚礁浅海剖面：造礁珊瑚和其他生物形成碳酸钙礁体&quot;),
+        mangrove: () =&gt; diagramShell(`
+          &lt;path d=&quot;M0 390H760V620H0Z&quot; fill=&quot;url(#dSea)&quot;/&gt;
+          &lt;path d=&quot;M0 475Q250 450 470 390T760 300V620H0Z&quot; fill=&quot;#a99e7b&quot;/&gt;
+          &lt;path d=&quot;M0 468Q250 447 470 383T760 293&quot; fill=&quot;none&quot; stroke=&quot;#c8bb93&quot; stroke-width=&quot;10&quot;/&gt;
+          &lt;g filter=&quot;url(#dShadow)&quot;&gt;
+            &lt;path d=&quot;M380 380v-145M510 340V175M630 302V155&quot; stroke=&quot;#665b43&quot; stroke-width=&quot;13&quot;/&gt;
+            &lt;path d=&quot;m380 343-35 68m35-68 30 60M510 310l-38 83m38-83 37 69M630 280l-34 78m34-78 34 60&quot; stroke=&quot;#665b43&quot; stroke-width=&quot;7&quot;/&gt;
+            &lt;path d=&quot;M292 247q-12-70 49-65 24-70 77-27 65-19 74 47 38 49-21 76-111 35-179-31Z&quot; fill=&quot;#577451&quot;/&gt;
+            &lt;path d=&quot;M425 191q-6-72 57-63 29-67 78-21 61-16 70 47 34 45-22 70-105 31-183-33Z&quot; fill=&quot;#4e6d4d&quot;/&gt;
+            &lt;path d=&quot;M551 161q0-62 50-54 29-50 67-16 55-8 59 42 26 41-20 62-91 22-156-34Z&quot; fill=&quot;#637d55&quot;/&gt;
+          &lt;/g&gt;
+          &lt;path d=&quot;M80 490C190 450 220 475 285 435S390 432 440 397&quot; fill=&quot;none&quot; stroke=&quot;#6d9788&quot; stroke-width=&quot;15&quot;/&gt;
+          ${waves(445)}${label(120,240,&quot;潮间带泥滩&quot;,230,457)}${label(315,120,&quot;红树植物群落&quot;,360,205)}${label(555,505,&quot;根系缓流、促淤&quot;,510,365)}
+          &lt;path d=&quot;M150 335v70m-8-13 8 13 8-13&quot; stroke=&quot;#c65f42&quot; stroke-width=&quot;2&quot; fill=&quot;none&quot;/&gt;&lt;text x=&quot;150&quot; y=&quot;317&quot; text-anchor=&quot;middle&quot; fill=&quot;#173f3d&quot; font-size=&quot;12&quot;&gt;潮汐浸淹&lt;/text&gt;`, &quot;红树林海岸剖面：潮间带红树植物、根系和泥质潮滩&quot;)
+      };
+      return (diagrams[id] || diagrams.headland)();
+    }
+
+    /* === 交互状态与 DOM === */
+    const stage = document.getElementById(&quot;atlas-stage&quot;);
+    const overview = document.getElementById(&quot;overview-layer&quot;);
+    const detailLayer = document.getElementById(&quot;detail-layer&quot;);
+    const hotspots = Array.from(document.querySelectorAll(&quot;.hotspot&quot;));
+    const backButton = document.getElementById(&quot;back-button&quot;);
+    const zoomIn = document.getElementById(&quot;zoom-in&quot;);
+    const zoomOut = document.getElementById(&quot;zoom-out&quot;);
+    const motionToggle = document.getElementById(&quot;motion-toggle&quot;);
+    let currentIndex = -1;
+    let viewScale = 1;
+    let lastTrigger = null;
+
+    const indexStrip = document.getElementById(&quot;index-strip&quot;);
+    landforms.forEach((item, index) =&gt; {
+      const button = document.createElement(&quot;button&quot;);
+      button.type = &quot;button&quot;;
+      button.className = &quot;index-chip&quot;;
+      button.dataset.id = item.id;
+      button.innerHTML = `&lt;span&gt;${String(index + 1).padStart(2, &quot;0&quot;)}&lt;/span&gt;${item.name}`;
+      button.setAttribute(&quot;aria-label&quot;, `查看${item.name}详解`);
+      button.addEventListener(&quot;click&quot;, event =&gt; openLandform(index, event.currentTarget));
+      indexStrip.appendChild(button);
+    });
+
+    function updateDetail(index) {
+      const item = landforms[index];
+      const prev = landforms[(index - 1 + landforms.length) % landforms.length];
+      const next = landforms[(index + 1) % landforms.length];
+      document.getElementById(&quot;diagram-container&quot;).innerHTML = renderDiagram(item.id);
+      document.getElementById(&quot;detail-number&quot;).textContent = `${String(index + 1).padStart(2, &quot;0&quot;)} / ${landforms.length}`;
+      document.getElementById(&quot;detail-category&quot;).textContent = item.categoryName;
+      document.getElementById(&quot;detail-title&quot;).textContent = item.name;
+      document.getElementById(&quot;detail-en&quot;).textContent = item.en;
+      document.getElementById(&quot;detail-intro&quot;).textContent = item.intro;
+      document.getElementById(&quot;detail-formation&quot;).textContent = item.formation;
+      document.getElementById(&quot;view-badge&quot;).textContent = `${item.view} · 非等比例`;
+      document.getElementById(&quot;detail-tags&quot;).innerHTML = item.tags.map(tag =&gt; `&lt;span&gt;${tag}&lt;/span&gt;`).join(&quot;&quot;);
+      document.getElementById(&quot;prev-name&quot;).textContent = prev.name;
+      document.getElementById(&quot;next-name&quot;).textContent = next.name;
+      document.getElementById(&quot;toolbar-title&quot;).textContent = `${item.name} · ${item.view}`;
+      document.getElementById(&quot;toolbar-subtitle&quot;).textContent = `${item.en} / 形成机制与形态识别`;
+      document.title = `${item.name}｜岸境海岸地貌图谱`;
+      detailLayer.setAttribute(&quot;aria-label&quot;, `${item.name}地貌详解`);
+      const info = document.querySelector(&quot;.detail-info&quot;);
+      info.scrollTop = 0;
+      detailLayer.scrollTop = 0;
+    }
+
+    function setOverviewTransform() {
+      if (currentIndex &gt;= 0) {
+        const item = landforms[currentIndex];
+        const marker = hotspots.find(node =&gt; node.dataset.id === item.id);
+        const x = Number(marker.dataset.x) / 16;
+        const y = Number(marker.dataset.y) / 10;
+        overview.style.transformOrigin = `${x}% ${y}%`;
+      } else {
+        overview.style.transformOrigin = &quot;50% 50%&quot;;
+        overview.style.transform = `scale(${viewScale})`;
+      }
+    }
+
+    function openLandform(index, trigger) {
+      if (index &lt; 0 || index &gt;= landforms.length) return;
+      if (trigger) lastTrigger = trigger;
+      currentIndex = index;
+      const item = landforms[index];
+      updateDetail(index);
+      hotspots.forEach(node =&gt; node.classList.toggle(&quot;is-active&quot;, node.dataset.id === item.id));
+      setOverviewTransform();
+      stage.classList.add(&quot;is-detail&quot;);
+      detailLayer.setAttribute(&quot;aria-hidden&quot;, &quot;false&quot;);
+      document.getElementById(&quot;zoom-actions&quot;).style.visibility = &quot;hidden&quot;;
+      history.replaceState({ landform: item.id }, &quot;&quot;, `#${item.id}`);
+      window.setTimeout(() =&gt; backButton.focus({ preventScroll: true }), 420);
+    }
+
+    function closeDetail() {
+      if (currentIndex &lt; 0) return;
+      currentIndex = -1;
+      stage.classList.remove(&quot;is-detail&quot;);
+      detailLayer.setAttribute(&quot;aria-hidden&quot;, &quot;true&quot;);
+      hotspots.forEach(node =&gt; node.classList.remove(&quot;is-active&quot;));
+      document.getElementById(&quot;zoom-actions&quot;).style.visibility = &quot;visible&quot;;
+      document.getElementById(&quot;toolbar-title&quot;).textContent = &quot;海岸全景 · 动态立体鸟瞰&quot;;
+      document.getElementById(&quot;toolbar-subtitle&quot;).textContent = &quot;潮汐持续冲刷 · 教学模型 / 非等比例&quot;;
+      document.title = &quot;岸境｜海岸地貌立体图谱&quot;;
+      history.replaceState(null, &quot;&quot;, `${location.pathname}${location.search}`);
+      setOverviewTransform();
+      centerMobileMap();
+      if (lastTrigger) window.setTimeout(() =&gt; lastTrigger.focus({ preventScroll: true }), 350);
+    }
+
+    hotspots.forEach((node, index) =&gt; {
+      const open = () =&gt; openLandform(landforms.findIndex(item =&gt; item.id === node.dataset.id), node);
+      node.addEventListener(&quot;click&quot;, open);
+      node.addEventListener(&quot;keydown&quot;, event =&gt; {
+        if (event.key === &quot;Enter&quot; || event.key === &quot; &quot;) { event.preventDefault(); open(); }
+      });
+    });
+    backButton.addEventListener(&quot;click&quot;, closeDetail);
+    document.getElementById(&quot;prev-button&quot;).addEventListener(&quot;click&quot;, () =&gt; openLandform((currentIndex - 1 + landforms.length) % landforms.length));
+    document.getElementById(&quot;next-button&quot;).addEventListener(&quot;click&quot;, () =&gt; openLandform((currentIndex + 1) % landforms.length));
+
+    document.addEventListener(&quot;keydown&quot;, event =&gt; {
+      if (currentIndex &lt; 0) return;
+      if (event.key === &quot;Escape&quot;) closeDetail();
+      if (event.key === &quot;ArrowLeft&quot;) openLandform((currentIndex - 1 + landforms.length) % landforms.length);
+      if (event.key === &quot;ArrowRight&quot;) openLandform((currentIndex + 1) % landforms.length);
+    });
+
+    function updateZoomButtons() {
+      zoomOut.disabled = viewScale &lt;= 1;
+      zoomIn.disabled = viewScale &gt;= 1.6;
+    }
+    zoomIn.addEventListener(&quot;click&quot;, () =&gt; { viewScale = Math.min(1.6, +(viewScale + 0.2).toFixed(1)); setOverviewTransform(); updateZoomButtons(); });
+    zoomOut.addEventListener(&quot;click&quot;, () =&gt; { viewScale = Math.max(1, +(viewScale - 0.2).toFixed(1)); setOverviewTransform(); updateZoomButtons(); });
+    document.getElementById(&quot;reset-view&quot;).addEventListener(&quot;click&quot;, () =&gt; { viewScale = 1; setOverviewTransform(); updateZoomButtons(); });
+    updateZoomButtons();
+
+    function setSeaMotion(paused) {
+      document.body.classList.toggle(&quot;motion-paused&quot;, paused);
+      motionToggle.setAttribute(&quot;aria-pressed&quot;, String(!paused));
+      motionToggle.setAttribute(&quot;aria-label&quot;, paused ? &quot;播放海水动态&quot; : &quot;暂停海水动态&quot;);
+      motionToggle.title = paused ? &quot;播放海水动态&quot; : &quot;暂停海水动态&quot;;
+      motionToggle.querySelector(&quot;span&quot;).textContent = paused ? &quot;动效暂停&quot; : &quot;海水动态&quot;;
+    }
+    motionToggle.addEventListener(&quot;click&quot;, () =&gt; {
+      setSeaMotion(motionToggle.getAttribute(&quot;aria-pressed&quot;) === &quot;true&quot;);
+    });
+    if (window.matchMedia(&quot;(prefers-reduced-motion: reduce)&quot;).matches) setSeaMotion(true);
+
+    function centerMobileMap() {
+      if (window.innerWidth &lt;= 768 &amp;&amp; currentIndex &lt; 0) {
+        overview.scrollLeft = Math.max(0, (1000 - overview.clientWidth) / 2);
+      }
+    }
+    centerMobileMap();
+    window.addEventListener(&quot;resize&quot;, centerMobileMap);
+
+    document.querySelectorAll(&quot;.filter-button&quot;).forEach(button =&gt; {
+      button.addEventListener(&quot;click&quot;, () =&gt; {
+        const filter = button.dataset.filter;
+        document.querySelectorAll(&quot;.filter-button&quot;).forEach(item =&gt; item.classList.toggle(&quot;is-active&quot;, item === button));
+        hotspots.forEach(node =&gt; node.classList.toggle(&quot;is-muted&quot;, filter !== &quot;all&quot; &amp;&amp; node.dataset.category !== filter));
+        document.querySelectorAll(&quot;.index-chip&quot;).forEach(chip =&gt; {
+          const item = landforms.find(entry =&gt; entry.id === chip.dataset.id);
+          chip.style.opacity = filter === &quot;all&quot; || item.category === filter ? &quot;1&quot; : &quot;.28&quot;;
+        });
+      });
+    });
+
+    /* 支持通过 #地貌ID 直接分享某一幅讲解图 */
+    const initialId = location.hash.slice(1);
+    const initialIndex = landforms.findIndex(item =&gt; item.id === initialId);
+    if (initialIndex &gt;= 0) openLandform(initialIndex);
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+</main>
+<script>
+document.getElementById('copy').addEventListener('click', async function () {
+  const button = this;
+  try {
+    await navigator.clipboard.writeText(document.getElementById('source-code').textContent);
+    button.textContent = '已复制';
+  } catch (error) {
+    const range = document.createRange();
+    range.selectNodeContents(document.getElementById('source-code'));
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    button.textContent = '已全选，请复制';
+  }
+  setTimeout(() => { button.textContent = '复制全部源码'; }, 2200);
+});
+</script>
+</body>
+</html>
